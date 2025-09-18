@@ -1,0 +1,27 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pessoa</title>
+    <link rel="stylesheet" href="{% static 'homepage/css/style.css' %}">
+</head>
+<body>
+
+    <form action="{% url 'cadastrar' %}" method="POST">
+        {% csrf_token %}
+        <label>Nome:</label>
+        <input type="text" name="nome" id="nome" >
+        <br>
+        <label>E-mail</label>
+        <input type="email" name="email" id="email">
+        <br>
+        <label>Idade</label>
+        <input type="number" name="idade" id="idade" >
+        <input type="submit" value="Enviar">
+    </form>
+
+</body>
+</html>
