@@ -14,3 +14,7 @@ def Cadastro(request):
         pessoa.save()
 
         return HttpResponse("Pessoa cadastrada com sucesso!")
+
+    def Lista(request):
+        pessoas = Pessoa.objects.all()
+        return render(request, 'listar.html', {'cidades': pessoas})
