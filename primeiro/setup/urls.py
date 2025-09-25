@@ -20,5 +20,6 @@ from Pessoa import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.Cadastro, name='cadastrar'),
+    path('cadastrar/', views.Cadastro, name='cadastrar'),
+    path('', views.Lista, name='listar'),
 ]

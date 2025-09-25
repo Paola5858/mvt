@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Lista de pessoas</h1>
+<a href="{% url 'cadastrar' %}">Cadastrar Nova Cidade</a>
+<ul>
+    {% for pessoa in pessoas %}
+    <li>
+        {{ pessoa.Nome }} - {{ pessoa.Idade }} - {{ pessoa.Cidade }}
+        <a href="{% url 'editar_cidade' pessoa.id %}">Editar</a> |
+        <a href="{% url 'excluir_cidade' pessoa.id %}">Excluir</a>
+    </li>
+    {% endfor %}
+</ul>
+</body>
+</html>
