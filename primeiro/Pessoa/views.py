@@ -13,8 +13,8 @@ def Cadastro(request):
         pessoa = Pessoa(nome=nome, idade=idade, email=email)
         pessoa.save()
 
-        return HttpResponse("Pessoa cadastrada com sucesso!")
+        return HttpResponse("Pessoa {nome} cadastrada com sucesso!")
 
-    def Lista(request):
-        pessoas = Pessoa.objects.all()
-        return render(request, 'listar.html', {'pessoas': pessoas})
+def Lista(request):
+      pessoas = Pessoa.objects.all()
+      return render(request, 'listar.html', {'pessoas': pessoas})
