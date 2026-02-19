@@ -1,0 +1,15 @@
+# Django e REST Framework
+Django>=6.0.2
+djangorestframework>=3.14.0
+
+# Filtros e Paginação
+django-filter>=23.0
+
+# Documentação API
+drf-yasg>=1.21.7
+
+# Banco de Dados
+mysqlclient>=2.2.0
+
+# Utilitários
+python-decouple>=3.8
