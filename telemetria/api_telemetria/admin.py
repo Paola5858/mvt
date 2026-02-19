@@ -33,9 +33,7 @@ class SensorAdmin(admin.ModelAdmin):
 @admin.register(Leitura)
 class LeituraAdmin(admin.ModelAdmin):
     """Admin customizado para Leituras."""
-    list_display = ['id', 'sensor', 'valor', 'data_hora']
+    list_display = ['id', 'sensor', 'valor']
     search_fields = ['sensor__tipo']
-    list_filter = ['data_hora', 'sensor']
+    list_filter = ['sensor']
     list_select_related = ['sensor', 'sensor__setor']
-    date_hierarchy = 'data_hora'
-    readonly_fields = ['data_hora']

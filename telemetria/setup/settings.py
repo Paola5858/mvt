@@ -85,6 +85,9 @@ DATABASES = {
         'PASSWORD': 'Senai901',
         'HOST': 'localhost',
         'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES', time_zone='-03:00'",
+        },
     }
 }
 
@@ -117,7 +120,7 @@ TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
