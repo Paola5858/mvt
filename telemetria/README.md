@@ -1,269 +1,366 @@
-# 🌾 API Telemetria - Sistema de Monitoramento Agrícola
+# 📡 API Telemetria de Veículos - SA1-E1
 
-API REST profissional desenvolvida com Django REST Framework para gerenciamento de telemetria agrícola, permitindo monitoramento de sensores distribuídos em diferentes setores.
+API REST completa para gerenciamento de telemetria de veículos.  
+Desenvolvida com Django Rest Framework + MySQL.
+
+**Repositório da atividade:** TELEMETRIA - PBE-4 - APIs de Cadastro
+
+---
+
+## 🎯 Objetivo da Atividade
+
+Criar APIs REST conforme diagrama fornecido, com:
+- Modelagem de dados relacional
+- CRUD completo em JSON
+- Conexão com MySQL (banco `telemetria`)
+- Documentação Swagger
+- Testes via Django Admin
+
+---
+
+## 🗂️ Modelagem de Dados
+
+### 📊 Diagrama Implementado
+
+```
+Marca (1) ──→ (N) Veiculo (1) ──→ (N) MedicaoVeiculo
+Modelo (1) ──→ (N) Veiculo
+UnidadeMedida (1) ──→ (N) Medicao (1) ──→ (N) MedicaoVeiculo
+```
+
+### 🚗 Marca
+- `id` (PK)
+- `nome` (CharField)
+
+### 📝 Modelo
+- `id` (PK)
+- `nome` (CharField)
+
+### 🚚 Veiculo
+- `id` (PK)
+- `descricao` (CharField)
+- `marca` (FK → Marca)
+- `modelo` (FK → Modelo)
+- `ano` (IntegerField)
+- `horimetro` (FloatField)
+
+### 📏 UnidadeMedida
+- `id` (PK)
+- `nome` (CharField)
+
+### 📊 Medicao
+- `id` (PK)
+- `tipo` (CharField com choices: horimetro, odometro, combustivel)
+- `unidade_medida` (FK → UnidadeMedida)
+
+### 📝 MedicaoVeiculo
+- `id` (PK)
+- `veiculo` (FK → Veiculo)
+- `medicao` (FK → Medicao)
+- `data` (DateField)
+- `valor` (FloatField)
+
+**Relacionamentos:**
+- Marca → Veiculo (1:N, CASCADE)
+- Modelo → Veiculo (1:N, CASCADE)
+- UnidadeMedida → Medicao (1:N, CASCADE)
+- Veiculo → MedicaoVeiculo (1:N, CASCADE)
+- Medicao → MedicaoVeiculo (1:N, CASCADE)
+
+---
 
 ## 🚀 Tecnologias
 
-- **Django 6.0.2** - Framework web Python
-- **Django REST Framework** - Toolkit para construção de APIs REST
-- **MySQL** - Banco de dados relacional
-- **drf-yasg** - Geração automática de documentação Swagger/OpenAPI
-- **django-filter** - Sistema avançado de filtros
-
-## 📋 Funcionalidades
-
-- ✔️ **CRUD Completo** para Setores, Sensores e Leituras
-- ✔️ **Versionamento de API** (v1)
-- ✔️ **Filtros Avançados** (por sensor, data, valor)
-- ✔️ **Ordenação Customizada** (por data, valor, nome)
-- ✔️ **Paginação Global** (10 itens por página, configurável)
-- ✔️ **Validações Personalizadas** nos serializers
-- ✔️ **Nested Serializers** (dados relacionados)
-- ✔️ **Documentação Swagger/ReDoc** interativa
-- ✔️ **Tratamento de Erros** padronizado
-- ✔️ **Otimização de Queries** (select_related, indexes)
-- ✔️ **Admin Customizado** com filtros e buscas
-- ✔️ **Autenticação por Token** (IsAuthenticatedOrReadOnly)
-- ✔️ **Testes Automatizados** (7 testes - 100% passando)
+- Python 3.x
+- Django 5.x
+- Django Rest Framework 3.x
+- drf-yasg (Swagger/OpenAPI)
+- MySQL 8.x
+- mysqlclient
 
 ---
 
-## 🔧 Instalação Rápida
+## 🔌 Configuração do Banco
 
-```bash
-# 1. Clonar e entrar no diretório
-git clone <seu-repositorio>
-cd telemetria
+**Banco:** `telemetria`
 
-# 2. Criar ambiente virtual
-python -m venv venv
-venv\Scripts\activate  # Windows
-
-# 3. Instalar dependências
-pip install -r requirements.txt
-
-# 4. Configurar banco MySQL
-# CREATE DATABASE telemetria CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-# 5. Migrar banco
-python manage.py migrate
-
-# 6. Criar superusuário
-python manage.py createsuperuser
-
-# 7. Rodar testes
-python manage.py test api_telemetria
-
-# 8. Iniciar servidor
-python manage.py runserver
-```
-
-**Acessar:**
-- API: http://localhost:8000/api/v1/
-- Swagger: http://localhost:8000/swagger/
-- Admin: http://localhost:8000/admin/
-
----
-
-## 🔐 Autenticação
-
-### Obter Token
-```bash
-POST /api/v1/auth/token/
-{
-  "username": "seu_usuario",
-  "password": "sua_senha"
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'telemetria',
+        'USER': 'root',
+        'PASSWORD': 'sua_senha',
+        'HOST': 'localhost',
+        'PORT': '3306',
+    }
 }
 ```
 
-### Usar Token
+---
+
+## ⚙️ Como Rodar
+
+### 1️⃣ Clonar o repositório
 ```bash
-Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b
+git clone <url-do-repo>
+cd mvt/telemetria
 ```
 
-**Política:** GET (leitura) é público. POST/PUT/PATCH/DELETE requer autenticação.
+### 2️⃣ Criar ambiente virtual
+```bash
+python -m venv .venv
+.\.venv\Scripts\Activate  # Windows
+```
+
+### 3️⃣ Instalar dependências
+```bash
+pip install -r requirements.txt
+```
+
+### 4️⃣ Configurar MySQL
+- Criar banco: `CREATE DATABASE telemetria;`
+- Editar credenciais em `setup/settings.py`
+
+### 5️⃣ Rodar migrações
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### 6️⃣ Criar superusuário
+```bash
+python manage.py createsuperuser
+```
+
+### 7️⃣ Iniciar servidor
+```bash
+python manage.py runserver
+```
 
 ---
 
-## 📚 Endpoints da API
+## 🌐 Endpoints da API
 
-### Base URL: `http://localhost:8000/api/v1/`
-
-### 🏢 Setores
+### Marca
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
-| GET | `/setores/` | Lista todos os setores |
-| POST | `/setores/` | Cria um novo setor |
-| GET | `/setores/{id}/` | Detalhes de um setor |
-| PATCH | `/setores/{id}/` | Atualiza parcialmente |
-| DELETE | `/setores/{id}/` | Remove um setor |
-| GET | `/setores/{id}/sensores/` | Lista sensores do setor |
+| GET | `/api/marcas/` | Lista marcas |
+| POST | `/api/marcas/` | Cria marca |
+| GET | `/api/marcas/{id}/` | Detalhe |
+| PUT | `/api/marcas/{id}/` | Atualiza |
+| DELETE | `/api/marcas/{id}/` | Remove |
 
-### 📡 Sensores
+### Modelo
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
-| GET | `/sensores/` | Lista todos os sensores |
-| POST | `/sensores/` | Cria um novo sensor |
-| GET | `/sensores/{id}/` | Detalhes de um sensor |
-| PATCH | `/sensores/{id}/` | Atualiza parcialmente |
-| DELETE | `/sensores/{id}/` | Remove um sensor |
-| GET | `/sensores/{id}/leituras/` | Lista leituras do sensor |
+| GET | `/api/modelos/` | Lista modelos |
+| POST | `/api/modelos/` | Cria modelo |
+| GET | `/api/modelos/{id}/` | Detalhe |
+| PUT | `/api/modelos/{id}/` | Atualiza |
+| DELETE | `/api/modelos/{id}/` | Remove |
 
-**Filtros:** `?setor=1` `?status=ativo` `?search=temperatura`
-
-### 📊 Leituras
+### Veiculo
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
-| GET | `/leituras/` | Lista todas as leituras |
-| POST | `/leituras/` | Cria uma nova leitura |
-| GET | `/leituras/{id}/` | Detalhes de uma leitura |
-| PATCH | `/leituras/{id}/` | Atualiza parcialmente |
-| DELETE | `/leituras/{id}/` | Remove uma leitura |
+| GET | `/api/veiculos/` | Lista veículos |
+| POST | `/api/veiculos/` | Cria veículo |
+| GET | `/api/veiculos/{id}/` | Detalhe |
+| PUT | `/api/veiculos/{id}/` | Atualiza |
+| DELETE | `/api/veiculos/{id}/` | Remove |
 
-**Filtros:** `?sensor=1` `?data_inicio=2024-01-01` `?data_fim=2024-12-31` `?valor_min=10` `?valor_max=100` `?ordering=-data_hora`
+### UnidadeMedida
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/api/unidades-medida/` | Lista unidades |
+| POST | `/api/unidades-medida/` | Cria unidade |
+| GET | `/api/unidades-medida/{id}/` | Detalhe |
+| PUT | `/api/unidades-medida/{id}/` | Atualiza |
+| DELETE | `/api/unidades-medida/{id}/` | Remove |
 
----
+### Medicao
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/api/medicoes/` | Lista medições |
+| POST | `/api/medicoes/` | Cria medição |
+| GET | `/api/medicoes/{id}/` | Detalhe |
+| PUT | `/api/medicoes/{id}/` | Atualiza |
+| DELETE | `/api/medicoes/{id}/` | Remove |
 
-## 💻 Exemplos Práticos
-
-### Criar Setor
-```bash
-curl -X POST http://localhost:8000/api/v1/setores/ \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Token SEU_TOKEN" \
-  -d '{"nome": "Estufa 1", "localizacao": "Área Norte"}'
-```
-
-### Criar Sensor
-```bash
-curl -X POST http://localhost:8000/api/v1/sensores/ \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Token SEU_TOKEN" \
-  -d '{"setor": 1, "tipo": "Temperatura", "status": "ativo"}'
-```
-
-### Criar Leitura
-```bash
-curl -X POST http://localhost:8000/api/v1/leituras/ \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Token SEU_TOKEN" \
-  -d '{"sensor": 1, "valor": 25.5}'
-```
-
-### Filtrar Leituras
-```bash
-# Por sensor e data
-curl "http://localhost:8000/api/v1/leituras/?sensor=1&data_inicio=2024-01-01&data_fim=2024-12-31"
-
-# Por intervalo de valores
-curl "http://localhost:8000/api/v1/leituras/?valor_min=20&valor_max=30&ordering=-data_hora"
-
-# Com paginação customizada
-curl "http://localhost:8000/api/v1/leituras/?page_size=20&page=1"
-```
+### MedicaoVeiculo
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/api/medicoes-veiculo/` | Lista registros |
+| POST | `/api/medicoes-veiculo/` | Cria registro |
+| GET | `/api/medicoes-veiculo/{id}/` | Detalhe |
+| PUT | `/api/medicoes-veiculo/{id}/` | Atualiza |
+| DELETE | `/api/medicoes-veiculo/{id}/` | Remove |
 
 ---
 
-## 🧪 Testes Automatizados
+## 📖 Documentação Swagger
 
-```bash
-python manage.py test api_telemetria
-```
+A API está documentada seguindo o padrão OpenAPI/Swagger:
 
-**Resultado:**
-```
-Ran 7 tests in 4.113s
-OK ✅
-```
+- **Swagger UI:** http://localhost:8000/swagger/
+- **ReDoc:** http://localhost:8000/redoc/
 
-**Cobertura:**
-- ✅ Criação de Setor
-- ✅ Listagem de Setores
-- ✅ Criação de Sensor com nested data
-- ✅ Validação de status do sensor
-- ✅ Criação de Leitura
-- ✅ Filtro de leituras por sensor
-- ✅ Validação de valores fora do intervalo
+Implementado com `drf-yasg`.
 
 ---
 
-## 🎯 Decisões Técnicas
+## 🖥️ Django Admin
 
-### Por que ModelViewSet?
-Optei por `ModelViewSet` para reduzir repetição de código e manter o projeto limpo. Isso me permitiu focar na lógica de negócio (filtros, validações) ao invés de reescrever operações CRUD básicas.
+Acesse: http://localhost:8000/admin/
 
-### Filtros Personalizados
-A implementação de filtros personalizados foi pensada para simular um cenário real de análise de dados agrícolas, onde é comum precisar consultar leituras por intervalo de tempo e faixa de valores.
+**Funcionalidades:**
+- ✅ Cadastro de Marcas
+- ✅ Cadastro de Modelos
+- ✅ Cadastro de Veículos (com FK para Marca e Modelo)
+- ✅ Cadastro de Unidades de Medida
+- ✅ Cadastro de Medições (com FK para UnidadeMedida)
+- ✅ Cadastro de Medições de Veículo (com FKs)
+- ✅ Busca e filtros customizados
 
-### Versionamento da API
-O versionamento (`/api/v1/`) foi adotado para permitir escalabilidade futura sem quebrar clientes existentes. Isso demonstra pensamento de longo prazo e maturidade arquitetural.
-
-### select_related e Indexes
-Utilizei `select_related('sensor', 'sensor__setor')` para evitar o problema N+1 de queries. Também criei indexes no banco para campos frequentemente consultados (`data_hora`, `sensor`). Isso mostra preocupação com performance desde o início.
-
-### Nested Serializers
-Implementei serializers aninhados para reduzir o número de requisições necessárias. Ao invés do cliente fazer 3 requests (leitura → sensor → setor), ele recebe tudo em uma única resposta.
-
-### Autenticação IsAuthenticatedOrReadOnly
-Escolhi essa abordagem para permitir que qualquer pessoa consulte os dados (útil para dashboards públicos), mas apenas usuários autenticados podem modificar. É um equilíbrio entre segurança e usabilidade.
+**Documentação dos testes:** Ver arquivo `../PRINTS_CADASTROS.md`
 
 ---
 
-## 💡 Aprendizado e Evolução
+## 🔍 Validação da Persistência
 
-Esse projeto foi um divisor de águas pra mim, porque deixou de ser apenas "criar uma API" e passou a ser **pensar arquitetura, organização e escalabilidade**.
+Consultas SQL executadas no banco `telemetria`:
 
-Percebi que backend não é só fazer funcionar, é estruturar pensando no futuro. Aprendi que:
+```sql
+-- Listar veículos com marca e modelo
+SELECT v.*, m.nome AS marca, mo.nome AS modelo 
+FROM api_telemetria_veiculo v
+JOIN api_telemetria_marca m ON v.marca_id = m.id
+JOIN api_telemetria_modelo mo ON v.modelo_id = mo.id;
 
-- **Organização importa**: Separar filtros, paginação e exceções em módulos próprios não é "over-engineering", é profissionalismo.
+-- Listar medições de veículos
+SELECT mv.*, v.descricao, med.tipo 
+FROM api_telemetria_medicaoveiculo mv
+JOIN api_telemetria_veiculo v ON mv.veiculo_id = v.id
+JOIN api_telemetria_medicao med ON mv.medicao_id = med.id
+ORDER BY mv.data DESC;
+```
 
-- **Testes não são opcionais**: Escrever testes me forçou a pensar em casos extremos e validações que eu não tinha considerado.
-
-- **Performance desde o início**: É muito mais fácil otimizar queries desde o começo do que refatorar depois com milhares de registros.
-
-- **Documentação é código**: O Swagger não é "extra", é parte essencial do produto. Uma API sem documentação é uma API incompleta.
-
-O que mais me orgulha nesse projeto não são as linhas de código, mas as **decisões conscientes** que tomei em cada etapa. Cada filtro, cada validação, cada teste tem um propósito claro.
+**Documentação completa:** Ver arquivo `../TESTES_SQL.md`
 
 ---
 
-## 🏗️ Arquitetura
+## 📋 Exemplos de Requisições
+
+### POST /api/marcas/
+```json
+{
+  "nome": "FIAT"
+}
+```
+
+### POST /api/modelos/
+```json
+{
+  "nome": "UNO"
+}
+```
+
+### POST /api/veiculos/
+```json
+{
+  "descricao": "Veículo de transporte",
+  "marca": 1,
+  "modelo": 1,
+  "ano": 2020,
+  "horimetro": 15000.0
+}
+```
+
+### POST /api/unidades-medida/
+```json
+{
+  "nome": "Horas"
+}
+```
+
+### POST /api/medicoes/
+```json
+{
+  "tipo": "horimetro",
+  "unidade_medida": 1
+}
+```
+
+### POST /api/medicoes-veiculo/
+```json
+{
+  "veiculo": 1,
+  "medicao": 1,
+  "data": "2024-01-15",
+  "valor": 15000.0
+}
+```
+
+---
+
+## ✅ Checklist da Atividade
+
+- ✅ APIs criadas conforme diagrama (Marca, Modelo, Veiculo, UnidadeMedida, Medicao, MedicaoVeiculo)
+- ✅ Modelagem com ForeignKeys corretas
+- ✅ CRUD completo (Create, Read, Update, Delete)
+- ✅ Formato JSON (via DRF Serializers)
+- ✅ Conexão com MySQL (banco `telemetria`)
+- ✅ Testes via Django Admin (ver `PRINTS_CADASTROS.md`)
+- ✅ Validação SQL (ver `TESTES_SQL.md`)
+- ✅ Documentação Swagger (drf-yasg)
+- ✅ Repositório no GitHub
+- ✅ README completo
+
+---
+
+## 📁 Estrutura do Projeto
 
 ```
 telemetria/
 ├── api_telemetria/
-│   ├── filters/              # Filtros personalizados
-│   ├── pagination/           # Paginação customizada
-│   ├── exceptions/           # Tratamento de erros
-│   ├── models.py            # Modelos com indexes
-│   ├── serializers.py       # Nested + validações
-│   ├── viewsets.py          # Filtros + documentação
-│   ├── tests.py             # 7 testes automatizados
-│   └── admin.py             # Admin customizado
+│   ├── models.py          # Marca, Modelo, Veiculo, UnidadeMedida, Medicao, MedicaoVeiculo
+│   ├── serializers.py     # Serializers DRF
+│   ├── views.py           # ViewSets
+│   ├── admin.py           # Config admin
+│   └── migrations/
 ├── setup/
-│   ├── settings.py          # Configurações REST Framework
-│   └── urls.py              # Versionamento + auth
-└── requirements.txt
+│   ├── settings.py        # Config MySQL + DRF
+│   ├── urls.py            # Rotas + Swagger
+│   └── wsgi.py
+├── requirements.txt
+├── manage.py
+├── PRINTS_CADASTROS.md    # Evidências admin
+└── TESTES_SQL.md          # Validação SQL
 ```
 
 ---
 
-## 🚀 Próximos Passos
+## 🎓 Competências Demonstradas
 
-- [ ] Implementar cache com Redis
-- [ ] Adicionar rate limiting
-- [ ] Deploy em produção (AWS/Heroku)
-- [ ] Adicionar CI/CD com GitHub Actions
-- [ ] Implementar WebSockets para dados em tempo real
-
----
-
-## 📝 Licença
-
-MIT License
+- Modelagem relacional (1:N)
+- API REST com Django Rest Framework
+- Integração com banco MySQL
+- Serialização JSON
+- ViewSets e Routers
+- Documentação OpenAPI/Swagger
+- Django Admin customizado
+- Validação de dados
+- Versionamento Git
 
 ---
 
-**Desenvolvido com 💙 como projeto de portfólio profissional**
+## 👩💻 Autora
 
-*Este projeto demonstra não apenas habilidades técnicas, mas também capacidade de pensar estrategicamente sobre arquitetura de software.*
+**Paola Soares Machado**
+
+📎 GitHub: [github.com/Paola5858](https://github.com/Paola5858)  
+📎 LinkedIn: [linkedin.com/in/paolasoaresmachado](https://linkedin.com/in/paolasoaresmachado)
+
+---
+
+⭐ Projeto desenvolvido como atividade avaliativa - PBE-4 - SENAI

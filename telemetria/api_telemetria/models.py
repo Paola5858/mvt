@@ -1,80 +1,93 @@
-"""Models da API de Telemetria."""
+"""Models da API de Telemetria de Veículos."""
 from django.db import models
 
 
-class Setor(models.Model):
-    """
-    Representa um setor físico onde sensores são instalados.
-    
-    Attributes:
-        nome: Nome identificador do setor
-        localizacao: Localização física ou descrição do setor
-    """
-    nome = models.CharField(max_length=100, verbose_name="Nome do Setor")
-    localizacao = models.CharField(max_length=200, verbose_name="Localização")
+class Marca(models.Model):
+    """Marca do veículo."""
+    nome = models.CharField(max_length=100, verbose_name="Nome da Marca")
 
     class Meta:
-        verbose_name = "Setor"
-        verbose_name_plural = "Setores"
+        verbose_name = "Marca"
+        verbose_name_plural = "Marcas"
         ordering = ['nome']
 
     def __str__(self):
         return self.nome
 
 
-class Sensor(models.Model):
-    """
-    Representa um sensor instalado em um setor.
-    
-    Attributes:
-        setor: Referência ao setor onde o sensor está instalado
-        tipo: Tipo do sensor (temperatura, umidade, etc.)
-        status: Status operacional do sensor
-    """
-    setor = models.ForeignKey(
-        Setor, 
-        on_delete=models.CASCADE, 
-        related_name="sensores",
-        verbose_name="Setor"
-    )
-    tipo = models.CharField(max_length=100, verbose_name="Tipo de Sensor")
-    status = models.CharField(max_length=50, verbose_name="Status")
+class Modelo(models.Model):
+    """Modelo do veículo."""
+    nome = models.CharField(max_length=100, verbose_name="Nome do Modelo")
 
     class Meta:
-        verbose_name = "Sensor"
-        verbose_name_plural = "Sensores"
+        verbose_name = "Modelo"
+        verbose_name_plural = "Modelos"
+        ordering = ['nome']
+
+    def __str__(self):
+        return self.nome
+
+
+class Veiculo(models.Model):
+    """Veículo cadastrado no sistema."""
+    descricao = models.CharField(max_length=200, verbose_name="Descrição")
+    marca = models.ForeignKey(Marca, on_delete=models.CASCADE, related_name="veiculos")
+    modelo = models.ForeignKey(Modelo, on_delete=models.CASCADE, related_name="veiculos")
+    ano = models.IntegerField(verbose_name="Ano")
+    horimetro = models.FloatField(verbose_name="Horímetro")
+
+    class Meta:
+        verbose_name = "Veículo"
+        verbose_name_plural = "Veículos"
         ordering = ['id']
 
     def __str__(self):
-        return f"{self.tipo} - {self.setor.nome}"
+        return f"{self.marca.nome} {self.modelo.nome} - {self.ano}"
 
 
-class Leitura(models.Model):
-    """
-    Representa uma leitura capturada por um sensor.
-    
-    Attributes:
-        sensor: Referência ao sensor que realizou a leitura
-        valor: Valor numérico da leitura
-        data_hora: Timestamp automático da criação da leitura
-    """
-    sensor = models.ForeignKey(
-        Sensor, 
-        on_delete=models.CASCADE, 
-        related_name="leituras",
-        verbose_name="Sensor"
-    )
-    valor = models.FloatField(verbose_name="Valor da Leitura")
-    data_hora = models.DateTimeField(auto_now_add=True, verbose_name="Data/Hora")
+class UnidadeMedida(models.Model):
+    """Unidade de medida para as medições."""
+    nome = models.CharField(max_length=50, verbose_name="Nome da Unidade")
 
     class Meta:
-        verbose_name = "Leitura"
-        verbose_name_plural = "Leituras"
-        ordering = ['-data_hora']
-        indexes = [
-            models.Index(fields=['-data_hora']),
-            models.Index(fields=['sensor', '-data_hora']),
-        ]
+        verbose_name = "Unidade de Medida"
+        verbose_name_plural = "Unidades de Medida"
+        ordering = ['nome']
 
     def __str__(self):
-        return f"{self.valor} - {self.sensor.tipo}"
+        return self.nome
+
+
+class Medicao(models.Model):
+    """Tipo de medição realizada."""
+    TIPO_CHOICES = [
+        ('horimetro', 'Horímetro'),
+        ('odometro', 'Odômetro'),
+        ('combustivel', 'Combustível'),
+    ]
+    tipo = models.CharField(max_length=50, choices=TIPO_CHOICES, verbose_name="Tipo")
+    unidade_medida = models.ForeignKey(UnidadeMedida, on_delete=models.CASCADE, related_name="medicoes")
+
+    class Meta:
+        verbose_name = "Medição"
+        verbose_name_plural = "Medições"
+        ordering = ['tipo']
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} ({self.unidade_medida.nome})"
+
+
+class MedicaoVeiculo(models.Model):
+    """Registro de medição de um veículo."""
+    veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE, related_name="medicoes")
+    medicao = models.ForeignKey(Medicao, on_delete=models.CASCADE, related_name="registros")
+    data = models.DateField(verbose_name="Data")
+    valor = models.FloatField(verbose_name="Valor")
+
+    class Meta:
+        verbose_name = "Medição de Veículo"
+        verbose_name_plural = "Medições de Veículos"
+        ordering = ['-data']
+
+    def __str__(self):
+        return f"{self.veiculo} - {self.medicao.tipo} - {self.valor}"

@@ -1,39 +1,45 @@
-"""Configuração do Django Admin para a API de Telemetria."""
+"""Configuração do Django Admin para a API de Telemetria de Veículos."""
 from django.contrib import admin
-from .models import Setor, Sensor, Leitura
+from .models import Marca, Modelo, Veiculo, UnidadeMedida, Medicao, MedicaoVeiculo
 
 
-@admin.register(Setor)
-class SetorAdmin(admin.ModelAdmin):
-    """Admin customizado para Setores."""
-    list_display = ['id', 'nome', 'localizacao', 'total_sensores']
-    search_fields = ['nome', 'localizacao']
-    list_filter = ['nome']
-    
-    def total_sensores(self, obj):
-        """Exibe o total de sensores no setor."""
-        return obj.sensores.count()
-    total_sensores.short_description = 'Total de Sensores'
+@admin.register(Marca)
+class MarcaAdmin(admin.ModelAdmin):
+    list_display = ['id', 'nome']
+    search_fields = ['nome']
 
 
-@admin.register(Sensor)
-class SensorAdmin(admin.ModelAdmin):
-    """Admin customizado para Sensores."""
-    list_display = ['id', 'tipo', 'setor', 'status', 'total_leituras']
-    search_fields = ['tipo', 'setor__nome']
-    list_filter = ['status', 'setor']
-    list_select_related = ['setor']
-    
-    def total_leituras(self, obj):
-        """Exibe o total de leituras do sensor."""
-        return obj.leituras.count()
-    total_leituras.short_description = 'Total de Leituras'
+@admin.register(Modelo)
+class ModeloAdmin(admin.ModelAdmin):
+    list_display = ['id', 'nome']
+    search_fields = ['nome']
 
 
-@admin.register(Leitura)
-class LeituraAdmin(admin.ModelAdmin):
-    """Admin customizado para Leituras."""
-    list_display = ['id', 'sensor', 'valor']
-    search_fields = ['sensor__tipo']
-    list_filter = ['sensor']
-    list_select_related = ['sensor', 'sensor__setor']
+@admin.register(Veiculo)
+class VeiculoAdmin(admin.ModelAdmin):
+    list_display = ['id', 'descricao', 'marca', 'modelo', 'ano', 'horimetro']
+    search_fields = ['descricao', 'marca__nome', 'modelo__nome']
+    list_filter = ['marca', 'modelo', 'ano']
+    list_select_related = ['marca', 'modelo']
+
+
+@admin.register(UnidadeMedida)
+class UnidadeMedidaAdmin(admin.ModelAdmin):
+    list_display = ['id', 'nome']
+    search_fields = ['nome']
+
+
+@admin.register(Medicao)
+class MedicaoAdmin(admin.ModelAdmin):
+    list_display = ['id', 'tipo', 'unidade_medida']
+    search_fields = ['tipo']
+    list_filter = ['tipo', 'unidade_medida']
+    list_select_related = ['unidade_medida']
+
+
+@admin.register(MedicaoVeiculo)
+class MedicaoVeiculoAdmin(admin.ModelAdmin):
+    list_display = ['id', 'veiculo', 'medicao', 'data', 'valor']
+    search_fields = ['veiculo__descricao']
+    list_filter = ['medicao', 'data']
+    list_select_related = ['veiculo', 'medicao']
