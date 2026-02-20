@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Telemetria de Veículos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        
+        .endpoints {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .endpoint-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .endpoint-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .endpoint-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .endpoint-card a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+        
+        .endpoint-card a:hover {
+            text-decoration: underline;
+        }
+        
+        .docs-section {
+            background: #667eea;
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .docs-section h2 {
+            margin-bottom: 20px;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-secondary {
+            background: #764ba2;
+            color: white;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .feature {
+            text-align: center;
+            padding: 15px;
+        }
+        
+        .feature-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .feature h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .feature p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 API Telemetria de Veículos</h1>
+            <p>Sistema completo de gerenciamento de telemetria</p>
+            <span class="badge">✓ Online</span>
+        </div>
+        
+        <div class="docs-section">
+            <h2>📖 Documentação Interativa</h2>
+            <div class="btn-group">
+                <a href="/swagger/" class="btn">Swagger UI</a>
+                <a href="/redoc/" class="btn">ReDoc</a>
+                <a href="/admin/" class="btn btn-secondary">Admin</a>
+            </div>
+        </div>
+        
+        <h2 style="color: #333; margin: 30px 0 20px 0;">🔗 Endpoints Disponíveis</h2>
+        <div class="endpoints">
+            <div class="endpoint-card">
+                <h3>🏷️ Marcas</h3>
+                <a href="/api/marcas/">/api/marcas/</a>
+            </div>
+            <div class="endpoint-card">
+                <h3>📝 Modelos</h3>
+                <a href="/api/modelos/">/api/modelos/</a>
+            </div>
+            <div class="endpoint-card">
+                <h3>🚚 Veículos</h3>
+                <a href="/api/veiculos/">/api/veiculos/</a>
+            </div>
+            <div class="endpoint-card">
+                <h3>📏 Unidades</h3>
+                <a href="/api/unidades-medida/">/api/unidades-medida/</a>
+            </div>
+            <div class="endpoint-card">
+                <h3>📊 Medições</h3>
+                <a href="/api/medicoes/">/api/medicoes/</a>
+            </div>
+            <div class="endpoint-card">
+                <h3>📈 Medições Veículo</h3>
+                <a href="/api/medicoes-veiculo/">/api/medicoes-veiculo/</a>
+            </div>
+        </div>
+        
+        <h2 style="color: #333; margin: 30px 0 20px 0;">✨ Recursos</h2>
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🔍</div>
+                <h4>Filtros</h4>
+                <p>Busca avançada</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📄</div>
+                <h4>Paginação</h4>
+                <p>10 itens/página</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⬆️</div>
+                <h4>Ordenação</h4>
+                <p>Por qualquer campo</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">✅</div>
+                <h4>Validações</h4>
+                <p>Dados consistentes</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Desenvolvido com Django Rest Framework</p>
+            <p style="margin-top: 5px; font-size: 0.9em;">PBE-4 - SENAI | Paola Soares Machado</p>
+        </div>
+    </div>
+</body>
+</html>

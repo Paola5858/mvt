@@ -1,6 +1,7 @@
 """URLs da API de Telemetria de Veículos."""
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -40,6 +41,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    path("", TemplateView.as_view(template_name="home.html"), name='home'),
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
     path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name='schema-swagger-ui'),
