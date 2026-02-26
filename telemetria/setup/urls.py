@@ -36,6 +36,7 @@ schema_view = get_schema_view(
         """,
         contact=openapi.Contact(email="contato@telemetria.com"),
         license=openapi.License(name="MIT License"),
+        terms_of_service="https://www.google.com/terms",
     ),
     public=True,
 )
