@@ -1,5 +1,5 @@
 # Django e REST Framework
-Django>=6.0.2
+Django>=5.0,<6.0
 djangorestframework>=3.14.0
 
 # Filtros e Paginação

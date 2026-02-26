@@ -1,5 +1,11 @@
 # 📡 API Telemetria de Veículos - SA1-E1
 
+![Python](https://img.shields.io/badge/Python-3.x-blue)
+![Django](https://img.shields.io/badge/Django-5.x-green)
+![DRF](https://img.shields.io/badge/DRF-3.x-red)
+![MySQL](https://img.shields.io/badge/MySQL-8.x-orange)
+![Swagger](https://img.shields.io/badge/Docs-Swagger-brightgreen)
+
 API REST completa para gerenciamento de telemetria de veículos.  
 Desenvolvida com Django Rest Framework + MySQL.
 
@@ -118,22 +124,45 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 4️⃣ Configurar MySQL
-- Criar banco: `CREATE DATABASE telemetria;`
-- Editar credenciais em `setup/settings.py`
+### 4️⃣ Configurar variáveis de ambiente
 
-### 5️⃣ Rodar migrações
+Copie o arquivo de exemplo e preencha com suas credenciais:
+
+```bash
+cp .env.example .env  # Linux/Mac
+copy .env.example .env  # Windows
+```
+
+Edite o `.env` com sua senha do MySQL:
+
+```env
+DB_NAME=telemetria
+DB_USER=root
+DB_PASSWORD=sua_senha_aqui
+DB_HOST=localhost
+DB_PORT=3306
+```
+
+### 5️⃣ Configurar MySQL
+
+Crie o banco de dados:
+
+```sql
+CREATE DATABASE telemetria;
+```
+
+### 6️⃣ Rodar migrações
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 6️⃣ Criar superusuário
+### 7️⃣ Criar superusuário
 ```bash
 python manage.py createsuperuser
 ```
 
-### 7️⃣ Iniciar servidor
+### 8️⃣ Iniciar servidor
 ```bash
 python manage.py runserver
 ```
@@ -249,6 +278,41 @@ ORDER BY mv.data DESC;
 
 ---
 
+## 🧪 Rodando os Testes
+
+Execute os testes automatizados:
+
+```bash
+python manage.py test
+```
+
+Para testes com mais detalhes:
+
+```bash
+python manage.py test --verbosity=2
+```
+
+Resultado esperado:
+
+```
+Found 6 test(s).
+System check identified no issues (0 silenced).
+
+test_criar_marca ... ok
+test_listar_marcas ... ok
+test_criar_modelo ... ok
+test_criar_veiculo ... ok
+test_validacao_ano_invalido ... ok
+test_criar_medicao_veiculo ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.234s
+
+OK
+```
+
+---
+
 ## 📋 Exemplos de Requisições
 
 ### POST /api/marcas/
@@ -315,6 +379,9 @@ ORDER BY mv.data DESC;
 - ✅ Documentação Swagger (drf-yasg)
 - ✅ Repositório no GitHub
 - ✅ README completo
+- ✅ Testes automatizados (ver `TESTES_AUTOMATIZADOS.md`)
+- ✅ Variáveis de ambiente com python-decouple
+- ✅ Permissões configuradas (AllowAny)
 
 ---
 
@@ -334,8 +401,11 @@ telemetria/
 │   └── wsgi.py
 ├── requirements.txt
 ├── manage.py
+├── .env.example           # Template de variáveis
+├── .env                   # Credenciais (não commitado)
 ├── PRINTS_CADASTROS.md    # Evidências admin
-└── TESTES_SQL.md          # Validação SQL
+├── TESTES_SQL.md          # Validação SQL
+└── TESTES_AUTOMATIZADOS.md # Testes unitários
 ```
 
 ---
@@ -351,6 +421,9 @@ telemetria/
 - Django Admin customizado
 - Validação de dados
 - Versionamento Git
+- Testes automatizados (TDD)
+- Segurança (variáveis de ambiente)
+- Boas práticas de desenvolvimento
 
 ---
 

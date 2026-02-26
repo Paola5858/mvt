@@ -1,4 +1,5 @@
 from rest_framework import viewsets, filters
+from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Marca, Modelo, Veiculo, UnidadeMedida, Medicao, MedicaoVeiculo
 from .serializers import (
@@ -11,6 +12,7 @@ class MarcaViewSet(viewsets.ModelViewSet):
     """ViewSet com busca e ordenação."""
     queryset = Marca.objects.all()
     serializer_class = MarcaSerializer
+    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['nome']
     ordering_fields = ['nome', 'id']
@@ -21,6 +23,7 @@ class ModeloViewSet(viewsets.ModelViewSet):
     """ViewSet com busca e ordenação."""
     queryset = Modelo.objects.all()
     serializer_class = ModeloSerializer
+    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['nome']
     ordering_fields = ['nome', 'id']
@@ -31,6 +34,7 @@ class VeiculoViewSet(viewsets.ModelViewSet):
     """ViewSet com filtros, busca e ordenação."""
     queryset = Veiculo.objects.select_related('marca', 'modelo').all()
     serializer_class = VeiculoSerializer
+    permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['marca', 'modelo', 'ano']
     search_fields = ['descricao', 'marca__nome', 'modelo__nome']
@@ -42,6 +46,7 @@ class UnidadeMedidaViewSet(viewsets.ModelViewSet):
     """ViewSet com busca."""
     queryset = UnidadeMedida.objects.all()
     serializer_class = UnidadeMedidaSerializer
+    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter]
     search_fields = ['nome']
 
@@ -50,6 +55,7 @@ class MedicaoViewSet(viewsets.ModelViewSet):
     """ViewSet com filtros e busca."""
     queryset = Medicao.objects.select_related('unidade_medida').all()
     serializer_class = MedicaoSerializer
+    permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['tipo', 'unidade_medida']
     search_fields = ['tipo']
@@ -59,6 +65,7 @@ class MedicaoVeiculoViewSet(viewsets.ModelViewSet):
     """ViewSet com filtros avançados, busca e ordenação."""
     queryset = MedicaoVeiculo.objects.select_related('veiculo', 'medicao').all()
     serializer_class = MedicaoVeiculoSerializer
+    permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['veiculo', 'medicao', 'data']
     search_fields = ['veiculo__descricao']
