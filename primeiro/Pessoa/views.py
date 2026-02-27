@@ -1,5 +1,4 @@
-from django.shortcuts import render
-from django.http import HttpResponse
+from django.shortcuts import render, redirect
 from .models import Pessoa
 
 def cadastro(request):
@@ -13,7 +12,7 @@ def cadastro(request):
         pessoa = Pessoa(nome=nome, idade=idade, email=email)
         pessoa.save()
 
-        return HttpResponse(f"Pessoa {nome} cadastrada com sucesso!")
+        return redirect('lista')
 
 def lista(request):
       pessoas = Pessoa.objects.all()
