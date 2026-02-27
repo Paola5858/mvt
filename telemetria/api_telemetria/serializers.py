@@ -7,6 +7,10 @@ class MarcaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Marca
         fields = ['id', 'nome']
+        extra_kwargs = {
+            'id': {'help_text': 'Identificador único da marca'},
+            'nome': {'help_text': 'Nome da marca do veículo (ex: FIAT, VOLKSWAGEN)'},
+        }
     
     def validate_nome(self, value):
         if not value or not value.strip():
@@ -20,6 +24,10 @@ class ModeloSerializer(serializers.ModelSerializer):
     class Meta:
         model = Modelo
         fields = ['id', 'nome']
+        extra_kwargs = {
+            'id': {'help_text': 'Identificador único do modelo'},
+            'nome': {'help_text': 'Nome do modelo do veículo (ex: UNO, GOL, CIVIC)'},
+        }
     
     def validate_nome(self, value):
         if not value or not value.strip():
@@ -36,6 +44,14 @@ class VeiculoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Veiculo
         fields = ['id', 'descricao', 'marca', 'marca_nome', 'modelo', 'modelo_nome', 'ano', 'horimetro']
+        extra_kwargs = {
+            'id': {'help_text': 'Identificador único do veículo'},
+            'descricao': {'help_text': 'Descrição do veículo (ex: Caminhão de entrega)'},
+            'marca': {'help_text': 'ID da marca do veículo'},
+            'modelo': {'help_text': 'ID do modelo do veículo'},
+            'ano': {'help_text': 'Ano de fabricação do veículo (entre 1900 e 2030)'},
+            'horimetro': {'help_text': 'Leitura atual do horímetro em horas'},
+        }
     
     def validate_ano(self, value):
         if value < 1900 or value > 2030:
@@ -59,6 +75,10 @@ class UnidadeMedidaSerializer(serializers.ModelSerializer):
     class Meta:
         model = UnidadeMedida
         fields = ['id', 'nome']
+        extra_kwargs = {
+            'id': {'help_text': 'Identificador único da unidade de medida'},
+            'nome': {'help_text': 'Nome da unidade de medida (ex: Horas, Quilômetros, Litros)'},
+        }
     
     def validate_nome(self, value):
         if not value or not value.strip():
@@ -72,6 +92,11 @@ class MedicaoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Medicao
         fields = ['id', 'tipo', 'unidade_medida', 'unidade_nome']
+        extra_kwargs = {
+            'id': {'help_text': 'Identificador único da medição'},
+            'tipo': {'help_text': 'Tipo da medição: horimetro, odometro ou combustivel'},
+            'unidade_medida': {'help_text': 'ID da unidade de medida utilizada'},
+        }
 
 
 class MedicaoVeiculoSerializer(serializers.ModelSerializer):
@@ -81,6 +106,13 @@ class MedicaoVeiculoSerializer(serializers.ModelSerializer):
     class Meta:
         model = MedicaoVeiculo
         fields = ['id', 'veiculo', 'veiculo_descricao', 'medicao', 'medicao_tipo', 'data', 'valor']
+        extra_kwargs = {
+            'id': {'help_text': 'Identificador único do registro'},
+            'veiculo': {'help_text': 'ID do veículo medido'},
+            'medicao': {'help_text': 'ID do tipo de medição realizada'},
+            'data': {'help_text': 'Data da medição no formato AAAA-MM-DD'},
+            'valor': {'help_text': 'Valor registrado na medição'},
+        }
     
     def validate_valor(self, value):
         if value < 0:
