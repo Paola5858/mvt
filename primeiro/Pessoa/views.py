@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from .models import Pessoa
 
-def Cadastro(request):
+def cadastro(request):
     if request.method == "GET":
         return render(request, 'cadastro.html')
     elif request.method == "POST":
@@ -13,8 +13,8 @@ def Cadastro(request):
         pessoa = Pessoa(nome=nome, idade=idade, email=email)
         pessoa.save()
 
-        return HttpResponse("Pessoa {nome} cadastrada com sucesso!")
+        return HttpResponse(f"Pessoa {nome} cadastrada com sucesso!")
 
-def Lista(request):
+def lista(request):
       pessoas = Pessoa.objects.all()
       return render(request, 'listar.html', {'pessoas': pessoas})
