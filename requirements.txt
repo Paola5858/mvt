@@ -1,6 +1,13 @@
+# Dependências principais
 asgiref==3.11.1
 Django==6.0.2
 djangorestframework==3.16.1
-mysqlclient==2.2.8
 sqlparse==0.5.5
 tzdata==2025.3
+
+# MySQL (opcional - apenas para o projeto doador/ se usar MySQL)
+# Descomente a linha abaixo se for usar MySQL:
+# mysqlclient==2.2.8
+
+# Nota: Os projetos animal/, animais/, primeiro/ usam SQLite (sem dependências extras)
+# O projeto telemetria/ usa python-decouple para variáveis de ambiente

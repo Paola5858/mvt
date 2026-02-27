@@ -3,7 +3,7 @@
 <ul>
   {% for animal in animais %}
     <li>
-      {{ animal.nome }} - {{ animal.especie }} - {{ animal.idade }} anos - {{ animal.peso }}kg
+      {{ animal.nome }} - {{ animal.tutor }} - {{ animal.idade }} anos - {{ animal.peso }}kg
       <a href="{% url 'editar_animal' animal.id %}">Editar</a>
       <a href="{% url 'deletar_animal' animal.id %}">Deletar</a>
     </li>

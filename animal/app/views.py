@@ -19,8 +19,8 @@ def criar_animal(request):
     return render(request, 'form.html', {'form': form})
 
 # EDITAR
-def editar_animal(request, id):
-    animal = get_object_or_404(Animal, id=id)
+def editar_animal(request, pk):
+    animal = get_object_or_404(Animal, pk=pk)
     if request.method == 'POST':
         form = AnimalForm(request.POST, instance=animal)
         if form.is_valid():
@@ -31,8 +31,8 @@ def editar_animal(request, id):
     return render(request, 'form.html', {'form': form})
 
 # DELETAR
-def deletar_animal(request, id):
-    animal = get_object_or_404(Animal, id=id)
+def deletar_animal(request, pk):
+    animal = get_object_or_404(Animal, pk=pk)
     if request.method == 'POST':
         animal.delete()
         return redirect('listar_animais')
