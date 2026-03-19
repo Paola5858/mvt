@@ -159,3 +159,7 @@ SWAGGER_SETTINGS = {
 
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = True
+
+# Media Files
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

@@ -91,3 +91,19 @@ class MedicaoVeiculo(models.Model):
 
     def __str__(self):
         return f"{self.veiculo} - {self.medicao.tipo} - {self.valor}"
+
+
+class MedicaoVeiculoTemp(models.Model):
+    """Tabela temporária para importação de medições via CSV."""
+    veiculoid = models.ForeignKey(Veiculo, on_delete=models.DO_NOTHING)
+    medicaoid = models.ForeignKey(Medicao, on_delete=models.DO_NOTHING)
+    data = models.DateTimeField()
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    arquivoid = models.CharField(max_length=256, db_index=True)
+
+    class Meta:
+        verbose_name = "Medição Temporária"
+        verbose_name_plural = "Medições Temporárias"
+
+    def __str__(self):
+        return f"{self.veiculoid} - {self.medicaoid} - {self.valor}"

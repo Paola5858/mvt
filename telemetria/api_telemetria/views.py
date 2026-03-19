@@ -1,12 +1,18 @@
 from rest_framework import viewsets, filters
 from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.parsers import MultiPartParser, FormParser
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
-from .models import Marca, Modelo, Veiculo, UnidadeMedida, Medicao, MedicaoVeiculo
+from .models import Marca, Modelo, Veiculo, UnidadeMedida, Medicao, MedicaoVeiculo, MedicaoVeiculoTemp
 from .serializers import (
     MarcaSerializer, ModeloSerializer, VeiculoSerializer,
-    UnidadeMedidaSerializer, MedicaoSerializer, MedicaoVeiculoSerializer
+    UnidadeMedidaSerializer, MedicaoSerializer, MedicaoVeiculoSerializer,
+    UploadCSVSerializer, MedicaoVeiculoTempSerializer
 )
+from .services import processar_csv_medicoes
 
 
 class MarcaViewSet(viewsets.ModelViewSet):
@@ -390,3 +396,40 @@ class MedicaoVeiculoViewSet(viewsets.ModelViewSet):
     )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+
+
+class ImportarMedicaoCSVViewSet(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+
+    @swagger_auto_schema(
+        operation_summary="Importar medições via CSV",
+        operation_description="Recebe um arquivo .csv com colunas: veiculoid, medicaoid, data, valor. Salva os dados na tabela temporária.",
+        tags=["Importação CSV"]
+    )
+    def post(self, request, *args, **kwargs):
+        serializer = UploadCSVSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        arquivo = serializer.validated_data["arquivo"]
+        try:
+            resultado = processar_csv_medicoes(arquivo)
+            return Response(
+                {"mensagem": "Arquivo processado com sucesso.", **resultado},
+                status=status.HTTP_201_CREATED
+            )
+        except Exception as e:
+            return Response(
+                {"erro": "Falha ao processar o arquivo.", "detalhe": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class MedicaoVeiculoTempViewSet(viewsets.ModelViewSet):
+    serializer_class = MedicaoVeiculoTempSerializer
+    queryset = MedicaoVeiculoTemp.objects.all()
+
+    @swagger_auto_schema(
+        operation_description="Retorna todas as informações de medições dos arquivos importados",
+        responses={200: MedicaoVeiculoTempSerializer(many=True)}
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
