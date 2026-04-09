@@ -1,3 +1,4 @@
+import uuid
 import os
 import json
 import django
@@ -11,26 +12,14 @@ from django.conf import settings
 from api_telemetria.models import MedicaoVeiculo, Veiculo, Medicao
 
 
-ERROS_CONNACK = {
-    1: "Versão de protocolo inaceitável",
-    2: "Client ID rejeitado",
-    3: "Servidor indisponível",
-    4: "Usuário ou senha incorretos",
-    5: "Não autorizado",
-}
-
-def on_connect(client, userdata, flags, rc):
-    if rc == 0:
+def on_connect(client, userdata, flags, reason_code, properties):
+    if reason_code.is_failure:
+        print(f"[MQTT] Falha na conexão: {reason_code}")
+        client.disconnect()
+    else:
         topic = settings.MQTT.get("TOPIC", "dadosSensor")
         client.subscribe(topic)
         print(f"[MQTT] Conectado! Inscrito no tópico: {topic}")
-    else:
-        motivo = ERROS_CONNACK.get(rc, f"código desconhecido: {rc}")
-        print(f"[MQTT] Falha na conexão: {motivo}")
-        if rc in (4, 5):
-            print("[MQTT] Credenciais inválidas. Encerrando.")
-            client.disconnect()
-            client.loop_stop()
 
 
 def on_message(client, userdata, msg):
@@ -67,12 +56,9 @@ def on_message(client, userdata, msg):
         print(f"[ERRO] Falha ao processar mensagem: {e}")
 
 
-def on_disconnect(client, userdata, rc):
-    if rc == 7:
-        print(f"[MQTT] Desconectado: não autorizado (código 7). Verifique as credenciais.")
-        client.loop_stop()
-    elif rc != 0:
-        print(f"[MQTT] Desconectado inesperadamente, código: {rc}. Tentando reconectar...")
+def on_disconnect(client, userdata, disconnect_flags, reason_code, properties):
+    if reason_code.value != 0:
+        print(f"[MQTT] Desconectado inesperadamente: {reason_code}. Tentando reconectar...")
 
 
 def main():
@@ -81,11 +67,11 @@ def main():
     host = mqtt_cfg.get("HOST", "127.0.0.1")
     port = mqtt_cfg.get("PORT", 1883)
     keepalive = mqtt_cfg.get("KEEPALIVE", 60)
-    client_id = mqtt_cfg.get("CLIENT_ID", "django-mqtt-worker")
+    client_id = mqtt_cfg.get("CLIENT_ID", f"django-worker-{uuid.uuid4().hex[:8]}")
     username = mqtt_cfg.get("USERNAME")
     password = mqtt_cfg.get("PASSWORD")
 
-    client = mqtt.Client(client_id=client_id)
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=client_id)
 
     if username and password:
         client.username_pw_set(username, password)
