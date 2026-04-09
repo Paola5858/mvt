@@ -30,9 +30,10 @@ def on_message(client, userdata, msg):
         print(f"[MQTT] Mensagem recebida: {data}")
 
         veiculo_id = int(data["veiculoid"])
-        medicao_id = int(data["medicaoid"])
+        medicao_id = int(data.get("medicaoid") or data["sensorid"])
         valor = float(data["valor"])
-        data_str = data.get("data", datetime.now().strftime("%Y-%m-%d"))
+        data_raw = data.get("data", datetime.now().isoformat())
+        data_str = datetime.fromisoformat(data_raw).strftime("%Y-%m-%d")
 
         veiculo = Veiculo.objects.get(id=veiculo_id)
         medicao = Medicao.objects.get(id=medicao_id)

@@ -166,10 +166,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 # MQTT Configuration
 MQTT = {
-    "HOST": "jackal.rmq.cloudamqp.com",
+    "HOST": "leopard.lmq.cloudamqp.com",
     "PORT": 1883,
     "KEEPALIVE": 60,
     "TOPIC": "dadosSensor",
-    "USERNAME": "pyrxippi:pyrxippi",
-    "PASSWORD": "fK5ZIfhJHHuf15OvBKh4wLGz5c9c57GX",
+    "CLIENT_ID": "django-mqtt-worker",
+    "USERNAME": "ipeuhpmz:ipeuhpmz",
+    "PASSWORD": "9mHDqT0glbXS60Kj9Yw4a5IdwasqviTd",
 }
