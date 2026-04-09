@@ -1,7 +1,7 @@
 """Testes da API de Telemetria de Veículos."""
 from rest_framework.test import APITestCase
 from rest_framework import status
-from .models import Marca, Modelo, Veiculo, UnidadeMedida, Medicao, MedicaoVeiculo
+from .models import Marca, Modelo, Veiculo, UnidadeMedida, Medicao
 
 
 class MarcaTestCase(APITestCase):

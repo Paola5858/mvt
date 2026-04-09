@@ -39,10 +39,10 @@ def processar_csv_medicoes(arquivo):
         campos_esperados = {"veiculoid", "medicaoid", "data", "valor"}
 
         if not reader.fieldnames:
-            raise Exception("O CSV não possui cabeçalho.")
+            raise ValueError("O CSV não possui cabeçalho.")
 
         if not campos_esperados.issubset(set(reader.fieldnames)):
-            raise Exception(
+            raise ValueError(
                 f"Cabeçalho inválido. Esperado: {list(campos_esperados)}. Recebido: {reader.fieldnames}"
             )
 
@@ -55,11 +55,11 @@ def processar_csv_medicoes(arquivo):
 
                 veiculo = veiculos_cache.get(id_veiculo)
                 if not veiculo:
-                    raise Exception(f"Veículo {id_veiculo} não encontrado.")
+                    raise LookupError(f"Veículo {id_veiculo} não encontrado.")
 
                 medicao = medicoes_cache.get(id_medicao)
                 if not medicao:
-                    raise Exception(f"Medição {id_medicao} não encontrada.")
+                    raise LookupError(f"Medição {id_medicao} não encontrada.")
 
                 data_convertida = datetime.strptime(
                     row["data"].strip(),

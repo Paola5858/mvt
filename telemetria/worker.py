@@ -8,8 +8,8 @@ from datetime import datetime
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "setup.settings")
 django.setup()
 
-from django.conf import settings
-from api_telemetria.models import MedicaoVeiculo, Veiculo, Medicao
+from django.conf import settings  # noqa: E402
+from api_telemetria.models import MedicaoVeiculo, Veiculo, Medicao  # noqa: E402
 
 
 def on_connect(client, userdata, flags, reason_code, properties):
