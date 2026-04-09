@@ -11,15 +11,26 @@ from django.conf import settings
 from api_telemetria.models import MedicaoVeiculo, Veiculo, Medicao
 
 
+ERROS_CONNACK = {
+    1: "Versão de protocolo inaceitável",
+    2: "Client ID rejeitado",
+    3: "Servidor indisponível",
+    4: "Usuário ou senha incorretos",
+    5: "Não autorizado",
+}
+
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
-        print(f"[MQTT] Conectado com sucesso ao broker")
+        topic = settings.MQTT.get("TOPIC", "dadosSensor")
+        client.subscribe(topic)
+        print(f"[MQTT] Conectado! Inscrito no tópico: {topic}")
     else:
-        print(f"[MQTT] Falha na conexão, código: {rc}")
-
-    topic = settings.MQTT.get("TOPIC", "dadosSensor")
-    client.subscribe(topic)
-    print(f"[MQTT] Inscrito no tópico: {topic}")
+        motivo = ERROS_CONNACK.get(rc, f"código desconhecido: {rc}")
+        print(f"[MQTT] Falha na conexão: {motivo}")
+        if rc in (4, 5):
+            print("[MQTT] Credenciais inválidas. Encerrando.")
+            client.disconnect()
+            client.loop_stop()
 
 
 def on_message(client, userdata, msg):
@@ -57,7 +68,10 @@ def on_message(client, userdata, msg):
 
 
 def on_disconnect(client, userdata, rc):
-    if rc != 0:
+    if rc == 7:
+        print(f"[MQTT] Desconectado: não autorizado (código 7). Verifique as credenciais.")
+        client.loop_stop()
+    elif rc != 0:
         print(f"[MQTT] Desconectado inesperadamente, código: {rc}. Tentando reconectar...")
 
 
@@ -75,6 +89,7 @@ def main():
 
     if username and password:
         client.username_pw_set(username, password)
+
 
     client.reconnect_delay_set(min_delay=1, max_delay=30)
 
