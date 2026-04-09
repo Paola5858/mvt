@@ -169,7 +169,7 @@ MQTT = {
     "HOST": "jackal.rmq.cloudamqp.com",
     "PORT": 1883,
     "KEEPALIVE": 60,
-    "TOPIC": "pyrxippi/dadosSensor",
+    "TOPIC": "dadosSensor",
     "USERNAME": "pyrxippi:pyrxippi",
     "PASSWORD": "fK5ZIfhJHHuf15OvBKh4wLGz5c9c57GX",
 }

@@ -59,6 +59,8 @@ def on_message(client, userdata, msg):
 def on_disconnect(client, userdata, disconnect_flags, reason_code, properties):
     if reason_code.value != 0:
         print(f"[MQTT] Desconectado inesperadamente: {reason_code}. Tentando reconectar...")
+    else:
+        print("[MQTT] Desconectado normalmente.")
 
 
 def main():
