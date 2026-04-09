@@ -163,3 +163,14 @@ CORS_ALLOW_ALL_ORIGINS = True
 # Media Files
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# MQTT Configuration
+MQTT = {
+    "HOST": "leopard.lmq.cloudamqp.com",
+    "PORT": 1883,
+    "KEEPALIVE": 60,
+    "TOPIC": "dadosSensor",
+    "CLIENT_ID": "django-mqtt-worker-telemetria",
+    "USERNAME": "idoufayf:idoufayf",
+    "PASSWORD": "DpH2tqSXK2l4s3tx5DNr3_ppS9aYGTis",
+}
