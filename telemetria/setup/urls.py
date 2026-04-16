@@ -9,9 +9,15 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from api_telemetria.views import (
-    MarcaViewSet, ModeloViewSet, VeiculoViewSet,
-    UnidadeMedidaViewSet, MedicaoViewSet, MedicaoVeiculoViewSet,
-    ImportarMedicaoCSVViewSet, MedicaoVeiculoTempViewSet
+    MarcaViewSet,
+    ModeloViewSet,
+    VeiculoViewSet,
+    UnidadeMedidaViewSet,
+    MedicaoViewSet,
+    MedicaoVeiculoViewSet,
+    ImportarMedicaoCSVViewSet,
+    MedicaoVeiculoTempViewSet,
+    SyncOfflineView,
 )
 
 # Router da API
@@ -30,7 +36,7 @@ schema_view = get_schema_view(
         title="API Telemetria de Veículos",
         default_version="v1",
         description="""API REST para gerenciamento de telemetria de veículos.
-        
+
         ## Funcionalidades
         - Gerenciamento de Marcas e Modelos
         - Cadastro de Veículos
@@ -46,10 +52,19 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="home.html"), name='home'),
+    path("", TemplateView.as_view(template_name="home.html"), name="home"),
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
-    path("importar-medicoes-csv/", ImportarMedicaoCSVViewSet.as_view(), name="importar-medicoes-csv"),
-    path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name='schema-swagger-ui'),
-    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name='schema-redoc'),
+    path("api/sync/offline/", SyncOfflineView.as_view(), name="sync-offline"),
+    path(
+        "importar-medicoes-csv/",
+        ImportarMedicaoCSVViewSet.as_view(),
+        name="importar-medicoes-csv",
+    ),
+    path(
+        "swagger/",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
+    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

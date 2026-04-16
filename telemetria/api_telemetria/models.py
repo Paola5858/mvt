@@ -107,3 +107,36 @@ class MedicaoVeiculoTemp(models.Model):
 
     def __str__(self):
         return f"{self.veiculoid} - {self.medicaoid} - {self.valor}"
+
+
+class MedicaoVeiculoIoT(models.Model):
+    """Medições em tempo real (realtime) do ESP32."""
+
+    veiculo = models.ForeignKey(
+        Veiculo, on_delete=models.CASCADE, related_name="medicoes_iot"
+    )
+    temperatura = models.FloatField(
+        help_text="Temperatura do motor em Celsius (-50°C a 250°C)"
+    )
+    vibracao = models.FloatField(help_text="Vibração em mm/s (0 a 100)")
+    rpm = models.IntegerField(help_text="Rotações por minuto (0 a 10000)")
+    timestamp_coleta = models.DateTimeField(
+        db_index=True, help_text="Timestamp de coleta no ESP32"
+    )
+    timestamp_recebimento = models.DateTimeField(
+        auto_now_add=True, db_index=True, help_text="Quando o backend recebeu a medição"
+    )
+
+    class Meta:
+        verbose_name = "Medição IoT"
+        verbose_name_plural = "Medições IoT"
+        ordering = ["-timestamp_recebimento"]
+        indexes = [
+            models.Index(fields=["veiculo", "-timestamp_recebimento"]),
+            models.Index(fields=["timestamp_coleta"]),
+        ]
+        # Impede duplicatas exatas (mesmo veículo, mesmo timestamp)
+        unique_together = [["veiculo", "timestamp_coleta"]]
+
+    def __str__(self):
+        return f"{self.veiculo.id} - {self.rpm}RPM - {self.temperatura}°C - {self.timestamp_coleta}"

@@ -1,18 +1,32 @@
-from rest_framework import viewsets, filters
-from rest_framework.permissions import AllowAny
+from rest_framework import viewsets, filters, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
-from .models import Marca, Modelo, Veiculo, UnidadeMedida, Medicao, MedicaoVeiculo, MedicaoVeiculoTemp
-from .serializers import (
-    MarcaSerializer, ModeloSerializer, VeiculoSerializer,
-    UnidadeMedidaSerializer, MedicaoSerializer, MedicaoVeiculoSerializer,
-    UploadCSVSerializer, MedicaoVeiculoTempSerializer
+from .models import (
+    Marca,
+    Modelo,
+    Veiculo,
+    UnidadeMedida,
+    Medicao,
+    MedicaoVeiculo,
+    MedicaoVeiculoTemp,
+    MedicaoVeiculoIoT,
 )
-from .services import processar_csv_medicoes
+from .serializers import (
+    MarcaSerializer,
+    ModeloSerializer,
+    VeiculoSerializer,
+    UnidadeMedidaSerializer,
+    MedicaoSerializer,
+    MedicaoVeiculoSerializer,
+    UploadCSVSerializer,
+    MedicaoVeiculoTempSerializer,
+    SyncPayloadSerializer,
+)
+from .services import processar_csv_medicoes, SyncService
 
 
 class MarcaViewSet(viewsets.ModelViewSet):
@@ -433,3 +447,74 @@ class MedicaoVeiculoTempViewSet(viewsets.ModelViewSet):
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+
+class SyncOfflineView(APIView):
+    """
+    View burra, do jeito que tem que ser.
+    Recebe o JSON do ESP32, passa pro serializer validar e chama o service.
+
+    POST /api/sync/offline/
+    {
+        "veiculo_id": 123,
+        "medicoes": [
+            {
+                "id_veiculo": 123,
+                "temperatura": 85.5,
+                "vibracao": 3.2,
+                "rpm": 2500,
+                "timestamp_coleta": "2026-04-16T10:30:00Z"
+            }
+        ]
+    }
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="Sincronizar medições offline do ESP32",
+        operation_description="Recebe batch de medições offline e insere no banco atômicamente.",
+        request_body=SyncPayloadSerializer,
+        responses={
+            201: {
+                "type": "object",
+                "properties": {
+                    "status": {"type": "string"},
+                    "registros_inseridos": {"type": "integer"},
+                    "registros_processados": {"type": "integer"},
+                },
+            },
+            400: {
+                "type": "object",
+                "properties": {
+                    "erro": {"type": "string"},
+                    "detalhes": {"type": "object"},
+                },
+            },
+        },
+        tags=["Sincronização Offline"],
+    )
+    def post(self, request):
+        serializer = SyncPayloadSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(
+                {"erro": "Payload sujo", "detalhes": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        dados_validados = serializer.validated_data
+
+        resultado = SyncService.processar_sync_offline(
+            veiculo_id=dados_validados["veiculo_id"],
+            medicoes_data=dados_validados["medicoes"],
+        )
+
+        # Se status é sucesso, retorna 201. Se erro, retorna 400.
+        response_status = (
+            status.HTTP_201_CREATED
+            if resultado["status"] == "sucesso"
+            else status.HTTP_400_BAD_REQUEST
+        )
+
+        return Response(resultado, status=response_status)
