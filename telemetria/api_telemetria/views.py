@@ -1,24 +1,24 @@
 from rest_framework import viewsets, filters
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny # Alterado para IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
-from .models import Marca, Modelo, Veiculo, UnidadeMedida, Medicao, MedicaoVeiculo, MedicaoVeiculoTemp
+from .models import Marca, Modelo, Veiculo, UnidadeMedida, Medicao, MedicaoVeiculo # Removido MedicaoVeiculoTemp
 from .serializers import (
     MarcaSerializer, ModeloSerializer, VeiculoSerializer,
     UnidadeMedidaSerializer, MedicaoSerializer, MedicaoVeiculoSerializer,
-    UploadCSVSerializer, MedicaoVeiculoTempSerializer
+    UploadCSVSerializer # Removido MedicaoVeiculoTempSerializer
 )
-from .services import processar_csv_medicoes
+from .services import processar_upload_csv_medicoes # Atualizado para o novo service
 
 
 class MarcaViewSet(viewsets.ModelViewSet):
     queryset = Marca.objects.all()
     serializer_class = MarcaSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly] # Permissão ajustada
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['nome']
     ordering_fields = ['nome', 'id']
@@ -82,7 +82,7 @@ class MarcaViewSet(viewsets.ModelViewSet):
 class ModeloViewSet(viewsets.ModelViewSet):
     queryset = Modelo.objects.all()
     serializer_class = ModeloSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['nome']
     ordering_fields = ['nome', 'id']
@@ -146,7 +146,7 @@ class ModeloViewSet(viewsets.ModelViewSet):
 class VeiculoViewSet(viewsets.ModelViewSet):
     queryset = Veiculo.objects.select_related('marca', 'modelo').all()
     serializer_class = VeiculoSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['marca', 'modelo', 'ano']
     search_fields = ['descricao', 'marca__nome', 'modelo__nome']
@@ -211,7 +211,7 @@ class VeiculoViewSet(viewsets.ModelViewSet):
 class UnidadeMedidaViewSet(viewsets.ModelViewSet):
     queryset = UnidadeMedida.objects.all()
     serializer_class = UnidadeMedidaSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter]
     search_fields = ['nome']
 
@@ -273,14 +273,14 @@ class UnidadeMedidaViewSet(viewsets.ModelViewSet):
 class MedicaoViewSet(viewsets.ModelViewSet):
     queryset = Medicao.objects.select_related('unidade_medida').all()
     serializer_class = MedicaoSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['tipo', 'unidade_medida']
     search_fields = ['tipo']
 
     @swagger_auto_schema(
         operation_summary="Listar medições",
-        operation_description="Lista todas as medições cadastradas",
+        operation_description="Lista todos os tipos de medições cadastradas",
         responses={200: MedicaoSerializer(many=True)},
         tags=['Medições']
     )
@@ -289,7 +289,7 @@ class MedicaoViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_summary="Criar medição",
-        operation_description="Cadastra uma nova medição com tipo e unidade de medida",
+        operation_description="Cadastra um novo tipo de medição",
         responses={201: MedicaoSerializer()},
         tags=['Medições']
     )
@@ -298,7 +298,7 @@ class MedicaoViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_summary="Detalhar medição",
-        operation_description="Retorna uma medição conforme o ID informado",
+        operation_description="Retorna um tipo de medição conforme o ID informado",
         responses={200: MedicaoSerializer()},
         tags=['Medições']
     )
@@ -307,7 +307,7 @@ class MedicaoViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_summary="Atualizar medição",
-        operation_description="Atualiza dados de uma medição conforme o ID informado",
+        operation_description="Atualiza dados de um tipo de medição conforme o ID informado",
         responses={200: MedicaoSerializer()},
         tags=['Medições']
     )
@@ -316,7 +316,7 @@ class MedicaoViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_summary="Atualizar medição parcialmente",
-        operation_description="Atualiza parcialmente os dados de uma medição conforme o ID informado",
+        operation_description="Atualiza parcialmente os dados de um tipo de medição conforme o ID informado",
         responses={200: MedicaoSerializer()},
         tags=['Medições']
     )
@@ -325,7 +325,7 @@ class MedicaoViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_summary="Remover medição",
-        operation_description="Remove uma medição conforme o ID informado",
+        operation_description="Remove um tipo de medição conforme o ID informado",
         responses={204: "Medição removida com sucesso"},
         tags=['Medições']
     )
@@ -334,18 +334,22 @@ class MedicaoViewSet(viewsets.ModelViewSet):
 
 
 class MedicaoVeiculoViewSet(viewsets.ModelViewSet):
-    queryset = MedicaoVeiculo.objects.select_related('veiculo', 'medicao').all()
+    queryset = MedicaoVeiculo.objects.select_related('veiculo', 'medicao', 'medicao__unidade_medida').all()
     serializer_class = MedicaoVeiculoSerializer
-    permission_classes = [AllowAny]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['veiculo', 'medicao', 'data']
-    search_fields = ['veiculo__descricao']
-    ordering_fields = ['data', 'valor']
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = {
+        'veiculo': ['exact'],
+        'medicao': ['exact'],
+        'data': ['exact', 'gte', 'lte'],
+        'valor': ['exact', 'gte', 'lte'],
+    }
+    ordering_fields = ['data', 'valor', 'veiculo__descricao', 'medicao__tipo']
     ordering = ['-data']
 
     @swagger_auto_schema(
         operation_summary="Listar medições de veículos",
-        operation_description="Lista todos os registros de medição de veículos",
+        operation_description="Lista todos os registros de medições de veículos",
         responses={200: MedicaoVeiculoSerializer(many=True)},
         tags=['Medições de Veículos']
     )
@@ -354,7 +358,7 @@ class MedicaoVeiculoViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_summary="Criar medição de veículo",
-        operation_description="Registra uma nova medição para um veículo",
+        operation_description="Cadastra um novo registro de medição para um veículo",
         responses={201: MedicaoVeiculoSerializer()},
         tags=['Medições de Veículos']
     )
@@ -363,7 +367,7 @@ class MedicaoVeiculoViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_summary="Detalhar medição de veículo",
-        operation_description="Retorna um registro de medição conforme o ID informado",
+        operation_description="Retorna um registro de medição de veículo conforme o ID informado",
         responses={200: MedicaoVeiculoSerializer()},
         tags=['Medições de Veículos']
     )
@@ -372,7 +376,7 @@ class MedicaoVeiculoViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_summary="Atualizar medição de veículo",
-        operation_description="Atualiza um registro de medição conforme o ID informado",
+        operation_description="Atualiza dados de um registro de medição de veículo conforme o ID informado",
         responses={200: MedicaoVeiculoSerializer()},
         tags=['Medições de Veículos']
     )
@@ -381,7 +385,7 @@ class MedicaoVeiculoViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_summary="Atualizar medição de veículo parcialmente",
-        operation_description="Atualiza parcialmente um registro de medição conforme o ID informado",
+        operation_description="Atualiza parcialmente os dados de um registro de medição de veículo conforme o ID informado",
         responses={200: MedicaoVeiculoSerializer()},
         tags=['Medições de Veículos']
     )
@@ -390,46 +394,40 @@ class MedicaoVeiculoViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_summary="Remover medição de veículo",
-        operation_description="Remove um registro de medição conforme o ID informado",
-        responses={204: "Registro removido com sucesso"},
+        operation_description="Remove um registro de medição de veículo conforme o ID informado",
+        responses={204: "Medição de veículo removida com sucesso"},
         tags=['Medições de Veículos']
     )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
 
 
-class ImportarMedicaoCSVViewSet(APIView):
-    parser_classes = [MultiPartParser, FormParser]
+class ImportarMedicaoCSVView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     @swagger_auto_schema(
         operation_summary="Importar medições via CSV",
-        operation_description="Recebe um arquivo .csv com colunas: veiculoid, medicaoid, data, valor. Salva os dados na tabela temporária.",
-        tags=["Importação CSV"]
+        operation_description="Faz upload de um arquivo CSV para importação de medições de veículos. O CSV deve conter as colunas: veiculoid, medicaoid, data (AAAA-MM-DD HH:MM:SS), valor.",
+        request_body=UploadCSVSerializer,
+        responses={
+            200: "Importação iniciada com sucesso",
+            400: "Erro na requisição ou no arquivo CSV",
+            500: "Erro interno do servidor"
+        },
+        tags=['Importação']
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request, format=None):
         serializer = UploadCSVSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        arquivo = serializer.validated_data["arquivo"]
-        try:
-            resultado = processar_csv_medicoes(arquivo)
-            return Response(
-                {"mensagem": "Arquivo processado com sucesso.", **resultado},
-                status=status.HTTP_201_CREATED
-            )
-        except Exception as e:
-            return Response(
-                {"erro": "Falha ao processar o arquivo.", "detalhe": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        if serializer.is_valid():
+            arquivo_csv = serializer.validated_data['arquivo']
+            resultado = processar_upload_csv_medicoes(arquivo_csv)
 
+            if resultado['status'] == 'sucesso':
+                return Response(resultado, status=status.HTTP_200_OK)
+            else:
+                return Response(resultado, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class MedicaoVeiculoTempViewSet(viewsets.ModelViewSet):
-    serializer_class = MedicaoVeiculoTempSerializer
-    queryset = MedicaoVeiculoTemp.objects.all()
-
-    @swagger_auto_schema(
-        operation_description="Retorna todas as informações de medições dos arquivos importados",
-        responses={200: MedicaoVeiculoTempSerializer(many=True)}
-    )
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+# Removido MedicaoVeiculoTempViewSet, pois a tabela temporária não será mais usada diretamente

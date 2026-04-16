@@ -11,7 +11,7 @@ from drf_yasg import openapi
 from api_telemetria.views import (
     MarcaViewSet, ModeloViewSet, VeiculoViewSet,
     UnidadeMedidaViewSet, MedicaoViewSet, MedicaoVeiculoViewSet,
-    ImportarMedicaoCSVViewSet, MedicaoVeiculoTempViewSet
+    ImportarMedicaoCSVView
 )
 
 # Router da API
@@ -22,8 +22,6 @@ router.register(r"veiculos", VeiculoViewSet, basename='veiculo')
 router.register(r"unidades-medida", UnidadeMedidaViewSet, basename='unidademedida')
 router.register(r"medicoes", MedicaoViewSet, basename='medicao')
 router.register(r"medicoes-veiculo", MedicaoVeiculoViewSet, basename='medicaoveiculo')
-router.register(r"medicaotemp", MedicaoVeiculoTempViewSet, basename='medicaotemp')
-
 # Swagger/OpenAPI Schema
 schema_view = get_schema_view(
     openapi.Info(
@@ -49,7 +47,7 @@ urlpatterns = [
     path("", TemplateView.as_view(template_name="home.html"), name='home'),
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
-    path("importar-medicoes-csv/", ImportarMedicaoCSVViewSet.as_view(), name="importar-medicoes-csv"),
+    path("importar-medicoes-csv/", ImportarMedicaoCSVView.as_view(), name="importar-medicoes-csv"),
     path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name='schema-swagger-ui'),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name='schema-redoc'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,40 @@
+classDiagram
+    direction LR
+    class Marca {
+        +int id
+        +string nome
+    }
+    class Modelo {
+        +int id
+        +string nome
+    }
+    class Veiculo {
+        +int id
+        +string descricao
+        +int ano
+        +float horimetro
+        +Marca marca
+        +Modelo modelo
+    }
+    class UnidadeMedida {
+        +int id
+        +string nome
+    }
+    class Medicao {
+        +int id
+        +string tipo
+        +UnidadeMedida unidade_medida
+    }
+    class MedicaoVeiculo {
+        +int id
+        +Veiculo veiculo
+        +Medicao medicao
+        +Date data
+        +float valor
+    }
+
+    Marca "1" -- "*" Veiculo : tem
+    Modelo "1" -- "*" Veiculo : tem
+    UnidadeMedida "1" -- "*" Medicao : tem
+    Medicao "1" -- "*" MedicaoVeiculo : tem
+    Veiculo "1" -- "*" MedicaoVeiculo : tem

@@ -1,6 +1,6 @@
 """Serializers da API de Telemetria de Veículos."""
 from rest_framework import serializers
-from .models import Marca, Modelo, Veiculo, UnidadeMedida, Medicao, MedicaoVeiculo, MedicaoVeiculoTemp
+from .models import Marca, Modelo, Veiculo, UnidadeMedida, Medicao, MedicaoVeiculo
 
 
 class MarcaSerializer(serializers.ModelSerializer):
@@ -129,9 +129,3 @@ class UploadCSVSerializer(serializers.Serializer):
         if not value.name.lower().endswith(".csv"):
             raise serializers.ValidationError("O arquivo enviado deve ser .csv")
         return value
-
-
-class MedicaoVeiculoTempSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MedicaoVeiculoTemp
-        fields = "__all__"
