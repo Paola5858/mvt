@@ -3,10 +3,11 @@ import json
 import random
 import time
 import warnings
+import paho.mqtt.client as mqtt
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-import paho.mqtt.client as mqtt
+
 
 MQTT = {
     "HOST": "jackal.rmq.cloudamqp.com",

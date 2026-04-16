@@ -39,11 +39,11 @@ def processar_csv_medicoes(arquivo):
     erros = []
     linhas_para_inserir = []
 
-    veiculos_cache = {v.id: v for v in Veiculo.objects.all()}
-    medicoes_cache = {m.id: m for m in Medicao.objects.all()}
+    veiculos_cache = {v.id: v for v in Veiculo.objects.all()}  # type: ignore
+    medicoes_cache = {m.id: m for m in Medicao.objects.all()}  # type: ignore
 
     with open(caminho_completo, mode="r", encoding="utf-8-sig", newline="") as f:
-        reader = csv.DictReader(f, delimiter=';')
+        reader = csv.DictReader(f, delimiter=";")
 
         campos_esperados = {"veiculoid", "medicaoid", "data", "valor"}
 
@@ -71,8 +71,7 @@ def processar_csv_medicoes(arquivo):
                     raise LookupError(f"Medição {id_medicao} não encontrada.")
 
                 data_convertida = datetime.strptime(
-                    row["data"].strip(),
-                    "%Y-%m-%d %H:%M:%S"
+                    row["data"].strip(), "%Y-%m-%d %H:%M:%S"
                 )
 
                 valor_convertido = Decimal(row["valor"].strip())
@@ -83,15 +82,12 @@ def processar_csv_medicoes(arquivo):
                         medicaoid=medicao,
                         data=data_convertida,
                         valor=valor_convertido,
-                        arquivoid=arquivoid
+                        arquivoid=arquivoid,
                     )
                 )
 
             except Exception as e:
-                erros.append({
-                    "linha": numero_linha,
-                    "erro": str(e)
-                })
+                erros.append({"linha": numero_linha, "erro": str(e)})
 
     total_linhas_validas = len(linhas_para_inserir)
 
@@ -117,7 +113,7 @@ def processar_csv_medicoes(arquivo):
         "total_linhas_arquivo": total_linhas_arquivo,
         "total_linhas_importadas": total_linhas_importadas,
         "quantidades_conferem": total_linhas_arquivo == total_linhas_importadas,
-        "erros": erros
+        "erros": erros,
     }
 
 

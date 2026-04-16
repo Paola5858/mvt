@@ -15,8 +15,8 @@ def processar_medicoes_mqtt(dados_medicao_list):
         logger.info("Nenhum dado de medição para processar via MQTT.")
         return
 
-    veiculos_cache = {v.id: v for v in Veiculo.objects.all()}
-    medicoes_cache = {m.id: m for m in Medicao.objects.all()}
+    veiculos_cache = {v.id: v for v in Veiculo.objects.all()}  # type: ignore
+    medicoes_cache = {m.id: m for m in Medicao.objects.all()}  # type: ignore
 
     medicoes_para_criar = []
     erros_processamento = []
@@ -71,5 +71,5 @@ def processar_medicoes_mqtt(dados_medicao_list):
 
     if erros_processamento:
         logger.warning(f"{len(erros_processamento)} erros encontrados durante o processamento MQTT.")
-    
+
     return {"sucesso": len(medicoes_para_criar) > 0, "erros": erros_processamento}

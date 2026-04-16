@@ -3,17 +3,18 @@ import json
 import logging
 import uuid
 import warnings
+import paho.mqtt.client as mqtt
+from django.conf import settings
+from api_telemetria.mqtt_service import processar_medicoes_mqtt
+import django
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "setup.settings")
 
-import django
+
 django.setup()
 
-import paho.mqtt.client as mqtt
-from django.conf import settings
-from api_telemetria.mqtt_service import processar_medicoes_mqtt
 
 logger = logging.getLogger(__name__)
 

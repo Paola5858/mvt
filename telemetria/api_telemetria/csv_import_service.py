@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from django.db import transaction
-from api_telemetria.models import MedicaoVeiculo, Veiculo, Medicao, UnidadeMedida
+from api_telemetria.models import MedicaoVeiculo, Veiculo, Medicao
 
 logger = logging.getLogger(__name__)
 
@@ -13,13 +13,13 @@ def processar_csv_para_medicoes(csv_file):
     Realiza validações e inserção em lote.
     """
     reader = csv.DictReader(csv_file, delimiter=";")
-    
+
     campos_esperados = {"veiculoid", "medicaoid", "data", "valor"}
     if not reader.fieldnames or not campos_esperados.issubset(set(reader.fieldnames)):
         raise ValueError(f"Cabeçalho CSV inválido. Esperado: {list(campos_esperados)}. Recebido: {reader.fieldnames}")
 
-    veiculos_cache = {v.id: v for v in Veiculo.objects.all()}
-    medicoes_cache = {m.id: m for m in Medicao.objects.all()}
+    veiculos_cache = {v.id: v for v in Veiculo.objects.all()}  # type: ignore
+    medicoes_cache = {m.id: m for m in Medicao.objects.all()}  # type: ignore
 
     medicoes_para_criar = []
     erros = []

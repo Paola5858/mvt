@@ -74,7 +74,7 @@ class Medicao(models.Model):
         ordering = ['tipo']
 
     def __str__(self):
-        return f"{self.get_tipo_display()} ({self.unidade_medida.nome})"
+        return f"{self.get_tipo_display()} ({self.unidade_medida.nome})"  # type: ignore
 
 
 class MedicaoVeiculo(models.Model):
@@ -139,4 +139,4 @@ class MedicaoVeiculoIoT(models.Model):
         unique_together = [["veiculo", "timestamp_coleta"]]
 
     def __str__(self):
-        return f"{self.veiculo.id} - {self.rpm}RPM - {self.temperatura}°C - {self.timestamp_coleta}"
+        return f"{self.veiculo.id} - {self.rpm}RPM - {self.temperatura}°C - {self.timestamp_coleta}"  # type: ignore
