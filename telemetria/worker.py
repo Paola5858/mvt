@@ -8,8 +8,38 @@ from datetime import datetime
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "setup.settings")
 django.setup()
 
-from django.conf import settings  # noqa: E402
-from api_telemetria.models import MedicaoVeiculo, Veiculo, Medicao  # noqa: E402
+from django.conf import settings
+from api_telemetria.models import MedicaoVeiculo, Veiculo, Medicao
+
+
+def salvar_medicao(item):
+    """
+    Função responsável pela inserção de um único registro no banco.
+    Recebe um dicionário com os dados de uma medição.
+    """
+    veiculo_id = int(item["veiculoid"])
+    medicao_id = int(item["sensorid"])
+    valor = float(item["valor"])
+
+    # converte data do formato dd/mm/yyyy HH:MM:SS para date
+    data_str = item.get("data", datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+    data_convertida = datetime.strptime(data_str, "%d/%m/%Y %H:%M:%S").strftime(
+        "%Y-%m-%d"
+    )
+
+    veiculo = Veiculo.objects.get(id=veiculo_id)
+    medicao = Medicao.objects.get(id=medicao_id)
+
+    MedicaoVeiculo.objects.create(
+        veiculo=veiculo,
+        medicao=medicao,
+        data=data_convertida,
+        valor=valor,
+    )
+
+    print(
+        f"[MQTT] Salvo: veiculo={veiculo_id} medicao={medicao_id} valor={valor} data={data_convertida}"
+    )
 
 
 def on_connect(client, userdata, flags, reason_code, properties):
@@ -23,36 +53,32 @@ def on_connect(client, userdata, flags, reason_code, properties):
 
 
 def on_message(client, userdata, msg):
+    """
+    Chamado quando uma mensagem chega no tópico.
+    O payload é um vetor (lista) de JSONs com dados de medição.
+    Percorre cada item do vetor e chama salvar_medicao para cada um.
+    """
     try:
         payload = msg.payload.decode("utf-8")
-        data = json.loads(payload)
+        dados = json.loads(payload)
 
-        print(f"[MQTT] Mensagem recebida: {data}")
+        print(f"[MQTT] Mensagem recebida com {len(dados)} registro(s)")
 
-        veiculo_id = int(data["veiculoid"])
-        medicao_id = int(data.get("medicaoid") or data["sensorid"])
-        valor = float(data["valor"])
-        data_raw = data.get("data", datetime.now().isoformat())
-        data_str = datetime.fromisoformat(data_raw).strftime("%Y-%m-%d")
+        # percorre o vetor de JSONs
+        for item in dados:
+            try:
+                salvar_medicao(item)
+            except Veiculo.DoesNotExist:
+                print(f"[ERRO] Veículo {item.get('veiculoid')} não encontrado")
+            except Medicao.DoesNotExist:
+                print(f"[ERRO] Medição {item.get('sensorid')} não encontrada")
+            except KeyError as e:
+                print(f"[ERRO] Campo obrigatório ausente: {e} | item: {item}")
+            except Exception as e:
+                print(f"[ERRO] Falha ao salvar item {item}: {e}")
 
-        veiculo = Veiculo.objects.get(id=veiculo_id)
-        medicao = Medicao.objects.get(id=medicao_id)
-
-        MedicaoVeiculo.objects.create(
-            veiculo=veiculo,
-            medicao=medicao,
-            data=data_str,
-            valor=valor,
-        )
-
-        print(f"[MQTT] Salvo: veiculo={veiculo_id} medicao={medicao_id} valor={valor}")
-
-    except KeyError as e:
-        print(f"[ERRO] Campo obrigatório ausente no payload: {e}")
-    except Veiculo.DoesNotExist:
-        print(f"[ERRO] Veículo {veiculo_id} não encontrado no banco")
-    except Medicao.DoesNotExist:
-        print(f"[ERRO] Medição {medicao_id} não encontrada no banco")
+    except json.JSONDecodeError as e:
+        print(f"[ERRO] Payload não é um JSON válido: {e}")
     except Exception as e:
         print(f"[ERRO] Falha ao processar mensagem: {e}")
 
@@ -78,7 +104,6 @@ def main():
 
     if username and password:
         client.username_pw_set(username, password)
-
 
     client.reconnect_delay_set(min_delay=1, max_delay=30)
 
