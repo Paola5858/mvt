@@ -26,7 +26,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=str).split(',')
 
 
 # Application definition
@@ -159,7 +159,7 @@ SWAGGER_SETTINGS = {
 
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='').split(',') if config('CORS_ALLOWED_ORIGINS', default='') else []
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='', cast=str).split(',') if config('CORS_ALLOWED_ORIGINS', default='', cast=str) else []
 
 # Media Files
 MEDIA_URL = "/media/"
@@ -167,11 +167,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 # MQTT Configuration
 MQTT = {
-    "HOST": config("MQTT_HOST", default="jackal.rmq.cloudamqp.com"),
-    "PORT": config("MQTT_PORT", default=1883, cast=int),
+    "HOST": "jackal.rmq.cloudamqp.com",
+    "PORT": 1883,
     "KEEPALIVE": 60,
-    "TOPIC": config("MQTT_TOPIC", default="dadosSensor"),
-    "CLIENT_ID": config("MQTT_CLIENT_ID", default="django-mqtt-worker"),
-    "USERNAME": config("MQTT_USERNAME"),
-    "PASSWORD": config("MQTT_PASSWORD"),
+    "TOPIC": "dadosSensor",
+    "CLIENT_ID": "django-worker",
+    "USERNAME": "pyrxippi:pyrxippi",
+    "PASSWORD": "fK5ZIfhJHHuf15OvBKh4wLGz5c9c57GX",
 }

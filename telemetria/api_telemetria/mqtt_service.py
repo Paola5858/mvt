@@ -5,6 +5,7 @@ from api_telemetria.models import MedicaoVeiculo, Veiculo, Medicao
 
 logger = logging.getLogger(__name__)
 
+
 def processar_medicoes_mqtt(dados_medicao_list):
     """
     Processa uma lista de dados de medição recebidos via MQTT.
@@ -22,9 +23,23 @@ def processar_medicoes_mqtt(dados_medicao_list):
 
     for item in dados_medicao_list:
         try:
-            veiculo_id = int(item.get("veiculoid"))
-            medicao_id = int(item.get("sensorid"))
-            valor = float(item.get("valor"))
+            try:
+                veiculo_id = int(item["veiculoid"])
+            except (KeyError, TypeError, ValueError):
+                raise ValueError("veiculoid ausente ou inválido")
+
+            try:
+                medicao_id = int(item["medicaoid"])
+            except (KeyError, TypeError, ValueError):
+                try:
+                    medicao_id = int(item["sensorid"])
+                except (KeyError, TypeError, ValueError):
+                    raise ValueError("medicaoid/sensorid ausente ou inválido")
+
+            try:
+                valor = float(item["valor"])
+            except (KeyError, TypeError, ValueError):
+                raise ValueError("valor ausente ou inválido")
 
             if veiculo_id not in veiculos_cache:
                 raise ValueError(f"Veículo {veiculo_id} não encontrado.")
@@ -32,8 +47,7 @@ def processar_medicoes_mqtt(dados_medicao_list):
                 raise ValueError(f"Medição {medicao_id} não encontrada.")
 
             data_str = item.get("data", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-            # Padronizando para YYYY-MM-DD HH:MM:SS para consistência
-            data_convertida = datetime.strptime(data_str, "%Y-%m-%d %H:%M:%S")
+            data_convertida = datetime.strptime(data_str, "%Y-%m-%dT%H:%M:%S.%f")
 
             medicoes_para_criar.append(
                 MedicaoVeiculo(
@@ -54,8 +68,8 @@ def processar_medicoes_mqtt(dados_medicao_list):
         with transaction.atomic():
             MedicaoVeiculo.objects.bulk_create(medicoes_para_criar, batch_size=1000)
             logger.info(f"{len(medicoes_para_criar)} medições inseridas em lote via MQTT.")
-    
+
     if erros_processamento:
         logger.warning(f"{len(erros_processamento)} erros encontrados durante o processamento MQTT.")
     
-    return {"total_processados": len(dados_medicao_list), "total_inseridos": len(medicoes_para_criar), "erros": erros_processamento}
+    return {"sucesso": len(medicoes_para_criar) > 0, "erros": erros_processamento}

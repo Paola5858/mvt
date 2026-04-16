@@ -423,7 +423,12 @@ class ImportarMedicaoCSVViewSet(APIView):
     def post(self, request, *args, **kwargs):
         serializer = UploadCSVSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        arquivo = serializer.validated_data["arquivo"]
+        validated = serializer.validated_data
+        arquivo = validated.get("arquivo")
+        if not arquivo:
+            return Response(
+                {"erro": "Arquivo não fornecido"}, status=status.HTTP_400_BAD_REQUEST
+            )
         try:
             resultado = processar_csv_medicoes(arquivo)
             return Response(
@@ -505,9 +510,17 @@ class SyncOfflineView(APIView):
 
         dados_validados = serializer.validated_data
 
+        veiculo_id = dados_validados.get("veiculo_id")
+        medicoes_data = dados_validados.get("medicoes")
+
+        if veiculo_id is None or medicoes_data is None:
+            return Response(
+                {"erro": "Dados inválidos"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         resultado = SyncService.processar_sync_offline(
-            veiculo_id=dados_validados["veiculo_id"],
-            medicoes_data=dados_validados["medicoes"],
+            veiculo_id=veiculo_id,
+            medicoes_data=medicoes_data,
         )
 
         # Se status é sucesso, retorna 201. Se erro, retorna 400.
