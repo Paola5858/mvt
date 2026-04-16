@@ -166,11 +166,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 # MQTT Configuration
 MQTT = {
-    "HOST": "jackal.rmq.cloudamqp.com",
-    "PORT": 1883,
+    "HOST": config("MQTT_HOST", default="jackal.rmq.cloudamqp.com"),
+    "PORT": config("MQTT_PORT", default=1883, cast=int),
     "KEEPALIVE": 60,
-    "TOPIC": "dadosSensor",
-    "CLIENT_ID": "django-mqtt-worker",
-    "USERNAME": "pyrxippi:pyrxippi",
-    "PASSWORD": "fK5ZIfhJHHuf15OvBKh4wLGz5c9c57GX",
+    "TOPIC": config("MQTT_TOPIC", default="dadosSensor"),
+    "CLIENT_ID": config("MQTT_CLIENT_ID", default="django-mqtt-worker"),
+    "USERNAME": config("MQTT_USERNAME"),
+    "PASSWORD": config("MQTT_PASSWORD"),
 }
