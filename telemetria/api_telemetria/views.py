@@ -2,7 +2,9 @@ from rest_framework import viewsets, filters, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
 from .models import (
@@ -220,6 +222,23 @@ class VeiculoViewSet(viewsets.ModelViewSet):
     )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+
+    @action(detail=True, methods=["get"], url_path="medicoes")
+    @swagger_auto_schema(
+        operation_summary="Listar medições de um veículo",
+        operation_description="Retorna todas as medições registradas para um veículo específico",
+        responses={200: MedicaoVeiculoSerializer(many=True)},
+        tags=["Veículos"],
+    )
+    def medicoes_por_veiculo(self, request, pk=None):
+        veiculo = get_object_or_404(Veiculo, pk=pk)
+        medicoes = (
+            MedicaoVeiculo.objects.filter(veiculo=veiculo)
+            .select_related("medicao", "medicao__unidade_medida")
+            .order_by("-data")
+        )
+        serializer = MedicaoVeiculoSerializer(medicoes, many=True)
+        return Response(serializer.data)
 
 
 class UnidadeMedidaViewSet(viewsets.ModelViewSet):
