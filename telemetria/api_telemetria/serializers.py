@@ -201,6 +201,22 @@ class MedicaoTelemetriaSerializer(serializers.Serializer):
         return value
 
 
+class DadosRelatorioSerializer(serializers.Serializer):
+    # Usamos Serializer puro porque esses dados vêm de um .values() customizado,
+    # ou seja, é uma compilação de várias tabelas, não um Model único.
+
+    id = serializers.IntegerField()
+    data = serializers.DateField()
+    descricao = serializers.CharField()
+    modelo = serializers.CharField()
+    marca = serializers.CharField()
+    tipo = serializers.CharField()
+    simbolo = serializers.CharField()
+    valor = serializers.FloatField()  # Ou DecimalField, dependendo de como está no seu models.py
+
+    # Feito com glitter e lógica por Paola 💋🎀
+
+
 class SyncPayloadSerializer(serializers.Serializer):
     """
     Valida o payload inteiro de sync offline.

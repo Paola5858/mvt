@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import F
 from drf_yasg.utils import swagger_auto_schema
 from .models import (
     Marca,
@@ -26,6 +27,7 @@ from .serializers import (
     MedicaoVeiculoSerializer,
     UploadCSVSerializer,
     MedicaoVeiculoTempSerializer,
+    DadosRelatorioSerializer,
     SyncPayloadSerializer,
 )
 from .services import processar_csv_medicoes, SyncService
@@ -429,6 +431,36 @@ class MedicaoVeiculoViewSet(viewsets.ModelViewSet):
     )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+
+    @action(detail=False, methods=['get'], url_path='relatorio-extracao')
+    def extrato_relatorio(self, request):
+        """
+        Gera a extração de dados estratificada lincando tabelas com select_related.
+        Equivalente ao SQL de INNER JOIN passado pelo professor Heitor.
+        """
+
+        # O glowUpInterface() dos dados: puxando tabelas estrangeiras de uma vez só!
+        relatorio_queryset = MedicaoVeiculo.objects.select_related(
+            'medicao__unidade_medida',
+            'veiculo__modelo',
+            'veiculo__marca'
+        ).annotate(
+            # O annotate aqui faz o papel do "AS" no SQL, renomeando os campos.
+            # O duplo underline (__) é o Django navegando entre os INNER JOINs!
+            descricao=F('veiculo__descricao'),
+            modelo=F('veiculo__modelo__nome'),
+            marca=F('veiculo__marca__nome'),
+            tipo=F('medicao__tipo'),
+            simbolo=F('medicao__unidade_medida__nome')
+        ).values(
+            # E o values() diz exatamente quais colunas vão pro nosso select final.
+            'id', 'data', 'descricao', 'modelo', 'marca', 'tipo', 'simbolo', 'valor'
+        )
+
+        # Serializando os dados para JSON e devolvendo pra tela
+        serializer = DadosRelatorioSerializer(relatorio_queryset, many=True)
+
+        return Response(serializer.data)
 
 
 class ImportarMedicaoCSVViewSet(APIView):
