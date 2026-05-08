@@ -7,6 +7,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F
+from django.utils.dateparse import parse_date
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from .models import (
     Marca,
@@ -29,6 +31,8 @@ from .serializers import (
     MedicaoVeiculoTempSerializer,
     DadosRelatorioSerializer,
     SyncPayloadSerializer,
+    SyncSuccessResponseSerializer,
+    SyncErrorResponseSerializer,
 )
 from .services import processar_csv_medicoes, SyncService
 
@@ -432,6 +436,30 @@ class MedicaoVeiculoViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
 
+    @swagger_auto_schema(
+        operation_summary="Extrair relatório de medições de veículos",
+        operation_description="Retorna uma lista de registros de medição de veículos com dados de marca, modelo e unidade de medida.",
+        manual_parameters=[
+            openapi.Parameter(
+                "data_inicial",
+                openapi.IN_QUERY,
+                description="Filtrar registros a partir desta data (YYYY-MM-DD).",
+                type=openapi.TYPE_STRING,
+                format="date",
+                required=False,
+            ),
+            openapi.Parameter(
+                "data_final",
+                openapi.IN_QUERY,
+                description="Filtrar registros até esta data (YYYY-MM-DD).",
+                type=openapi.TYPE_STRING,
+                format="date",
+                required=False,
+            ),
+        ],
+        responses={200: DadosRelatorioSerializer(many=True)},
+        tags=["Relatórios"],
+    )
     @action(detail=False, methods=['get'], url_path='relatorio-extracao')
     def extrato_relatorio(self, request):
         """
@@ -456,6 +484,27 @@ class MedicaoVeiculoViewSet(viewsets.ModelViewSet):
             # E o values() diz exatamente quais colunas vão pro nosso select final.
             'id', 'data', 'descricao', 'modelo', 'marca', 'tipo', 'simbolo', 'valor'
         )
+
+        data_inicial = request.query_params.get("data_inicial")
+        data_final = request.query_params.get("data_final")
+
+        if data_inicial:
+            parsed_inicial = parse_date(data_inicial)
+            if parsed_inicial is None:
+                return Response(
+                    {"erro": "data_inicial inválida. Use o formato YYYY-MM-DD."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            relatorio_queryset = relatorio_queryset.filter(data__gte=parsed_inicial)
+
+        if data_final:
+            parsed_final = parse_date(data_final)
+            if parsed_final is None:
+                return Response(
+                    {"erro": "data_final inválida. Use o formato YYYY-MM-DD."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            relatorio_queryset = relatorio_queryset.filter(data__lte=parsed_final)
 
         # Serializando os dados para JSON e devolvendo pra tela
         serializer = DadosRelatorioSerializer(relatorio_queryset, many=True)
@@ -532,21 +581,8 @@ class SyncOfflineView(APIView):
         operation_description="Recebe batch de medições offline e insere no banco atômicamente.",
         request_body=SyncPayloadSerializer,
         responses={
-            201: {
-                "type": "object",
-                "properties": {
-                    "status": {"type": "string"},
-                    "registros_inseridos": {"type": "integer"},
-                    "registros_processados": {"type": "integer"},
-                },
-            },
-            400: {
-                "type": "object",
-                "properties": {
-                    "erro": {"type": "string"},
-                    "detalhes": {"type": "object"},
-                },
-            },
+            201: SyncSuccessResponseSerializer(),
+            400: SyncErrorResponseSerializer(),
         },
         tags=["Sincronização Offline"],
     )

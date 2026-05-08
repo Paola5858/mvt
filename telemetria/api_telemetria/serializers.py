@@ -246,3 +246,22 @@ class SyncPayloadSerializer(serializers.Serializer):
                 "Quebra em múltiplos requests."
             )
         return value
+
+
+class SyncSuccessResponseSerializer(serializers.Serializer):
+    """
+    Resposta de sucesso da sincronização offline.
+    """
+
+    status = serializers.CharField()
+    registros_inseridos = serializers.IntegerField()
+    registros_processados = serializers.IntegerField()
+
+
+class SyncErrorResponseSerializer(serializers.Serializer):
+    """
+    Resposta de erro da sincronização offline.
+    """
+
+    erro = serializers.CharField()
+    detalhes = serializers.JSONField()
