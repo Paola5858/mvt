@@ -1,5 +1,6 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -514,6 +515,8 @@ class MedicaoVeiculoViewSet(viewsets.ModelViewSet):
 
 class ImportarMedicaoCSVViewSet(APIView):
     parser_classes = [MultiPartParser, FormParser]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'telemetry_ingest'
 
     @swagger_auto_schema(
         operation_summary="Importar medições via CSV",
@@ -575,6 +578,8 @@ class SyncOfflineView(APIView):
     """
 
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'telemetry_ingest'
 
     @swagger_auto_schema(
         operation_summary="Sincronizar medições offline do ESP32",
