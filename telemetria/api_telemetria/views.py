@@ -623,3 +623,62 @@ class SyncOfflineView(APIView):
         )
 
         return Response(resultado, status=response_status)
+
+
+class DadosRelatorioViewSet(viewsets.ViewSet):
+    @swagger_auto_schema(
+        operation_summary="Dados para relatório",
+        operation_description="Retorna dados de medições de veículos filtrados por período, prontos para consumo no Power BI.",
+        manual_parameters=[
+            openapi.Parameter(
+                "data_inicio",
+                openapi.IN_QUERY,
+                description="Data inicial do período (formato: YYYY-MM-DD)",
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATE,
+            ),
+            openapi.Parameter(
+                "data_fim",
+                openapi.IN_QUERY,
+                description="Data final do período (formato: YYYY-MM-DD)",
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATE,
+            ),
+        ],
+        tags=["Relatórios"],
+    )
+    @action(detail=False, methods=["get"])
+    def DadosRelatorio(self, request):
+        data_inicio = self.request.query_params.get("data_inicio")
+        data_fim = self.request.query_params.get("data_fim")
+
+        dados = (
+            MedicaoVeiculo.objects.select_related(
+                "veiculo__marca",
+                "veiculo__modelo",
+                "medicao__unidade_medida",
+            )
+            .filter(data__gte=data_inicio, data__lte=data_fim)
+            .annotate(
+                descricao=F("veiculo__descricao"),
+                modelo=F("veiculo__modelo__nome"),
+                marca=F("veiculo__marca__nome"),
+                tipo=F("medicao__tipo"),
+                unidade=F("medicao__unidade_medida__nome"),
+            )
+            .values(
+                "id",
+                "data",
+                "descricao",
+                "modelo",
+                "marca",
+                "tipo",
+                "unidade",
+                "valor",
+            )
+        )
+
+        from .serializers import DadosRelatorioSerializer
+
+        serializer = DadosRelatorioSerializer(dados, many=True)
+        return Response(serializer.data)
