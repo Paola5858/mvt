@@ -649,33 +649,51 @@ class DadosRelatorioViewSet(viewsets.ViewSet):
     )
     @action(detail=False, methods=["get"])
     def DadosRelatorio(self, request):
-        data_inicio = self.request.query_params.get("data_inicio")
-        data_fim = self.request.query_params.get("data_fim")
+        data_inicio = request.query_params.get("data_inicio")
+        data_fim = request.query_params.get("data_fim")
 
-        dados = (
-            MedicaoVeiculo.objects.select_related(
-                "veiculo__marca",
-                "veiculo__modelo",
-                "medicao__unidade_medida",
-            )
-            .filter(data__gte=data_inicio, data__lte=data_fim)
-            .annotate(
-                descricao=F("veiculo__descricao"),
-                modelo=F("veiculo__modelo__nome"),
-                marca=F("veiculo__marca__nome"),
-                tipo=F("medicao__tipo"),
-                unidade=F("medicao__unidade_medida__nome"),
-            )
-            .values(
-                "id",
-                "data",
-                "descricao",
-                "modelo",
-                "marca",
-                "tipo",
-                "unidade",
-                "valor",
-            )
+        if data_inicio:
+            data_inicio = parse_date(data_inicio)
+            if data_inicio is None:
+                return Response(
+                    {"erro": "data_inicio inválida. Use o formato YYYY-MM-DD."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        if data_fim:
+            data_fim = parse_date(data_fim)
+            if data_fim is None:
+                return Response(
+                    {"erro": "data_fim inválida. Use o formato YYYY-MM-DD."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        queryset = MedicaoVeiculo.objects.select_related(
+            "veiculo__marca",
+            "veiculo__modelo",
+            "medicao__unidade_medida",
+        )
+
+        if data_inicio:
+            queryset = queryset.filter(data__gte=data_inicio)
+        if data_fim:
+            queryset = queryset.filter(data__lte=data_fim)
+
+        dados = queryset.annotate(
+            descricao=F("veiculo__descricao"),
+            modelo=F("veiculo__modelo__nome"),
+            marca=F("veiculo__marca__nome"),
+            tipo=F("medicao__tipo"),
+            unidade=F("medicao__unidade_medida__nome"),
+        ).values(
+            "id",
+            "data",
+            "descricao",
+            "modelo",
+            "marca",
+            "tipo",
+            "unidade",
+            "valor",
         )
 
         from .serializers import DadosRelatorioSerializer
