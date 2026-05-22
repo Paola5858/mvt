@@ -19,6 +19,8 @@ from api_telemetria.views import (
     MedicaoVeiculoTempViewSet,
     SyncOfflineView,
     DadosRelatorioViewSet,
+    UserViewSet,
+    LoginViewSet,
 )
 
 # Router da API
@@ -31,6 +33,8 @@ router.register(r"medicoes", MedicaoViewSet, basename='medicao')
 router.register(r"medicoes-veiculo", MedicaoVeiculoViewSet, basename='medicaoveiculo')
 router.register(r"medicaotemp", MedicaoVeiculoTempViewSet, basename='medicaotemp')
 router.register(r"relatorios", DadosRelatorioViewSet, basename="relatorios")
+router.register(r"usuarios", UserViewSet, basename="usuario")
+router.register(r"auth", LoginViewSet, basename="auth")
 
 # Swagger/OpenAPI Schema
 schema_view = get_schema_view(

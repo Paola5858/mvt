@@ -5,6 +5,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F
@@ -34,8 +36,11 @@ from .serializers import (
     SyncPayloadSerializer,
     SyncSuccessResponseSerializer,
     SyncErrorResponseSerializer,
+    UserSerializer,
+    LoginSerializer,
 )
 from .services import processar_csv_medicoes, SyncService
+from rest_framework.authtoken.models import Token
 
 
 class MarcaViewSet(viewsets.ModelViewSet):
@@ -633,6 +638,46 @@ class SyncOfflineView(APIView):
         )
 
         return Response(resultado, status=response_status)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+    permission_classes = [IsAuthenticated]
+
+
+class LoginViewSet(viewsets.ViewSet):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_summary="Login — gerar token",
+        operation_description="Autentica o usuário e retorna o token de acesso.",
+        request_body=LoginSerializer,
+        responses={200: UserSerializer()},
+        tags=["Autenticação"],
+    )
+    @action(detail=False, methods=["post"])
+    def login(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            username = serializer.validated_data["username"]
+            password = serializer.validated_data["password"]
+            user = authenticate(username=username, password=password)
+
+            if user is not None:
+                token, created = Token.objects.get_or_create(user=user)
+                return Response(
+                    {
+                        "token": token.key,
+                        "user": UserSerializer(user).data,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
+        return Response(
+            {"error": "Invalid credentials"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class DadosRelatorioViewSet(viewsets.ViewSet):

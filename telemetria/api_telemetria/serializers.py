@@ -1,4 +1,5 @@
 """Serializers da API de Telemetria de Veículos."""
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import Marca, Modelo, Veiculo, UnidadeMedida, Medicao, MedicaoVeiculo, MedicaoVeiculoTemp
 
@@ -268,3 +269,14 @@ class SyncErrorResponseSerializer(serializers.Serializer):
 
     erro = serializers.CharField()
     detalhes = serializers.JSONField()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "first_name", "last_name"]
+
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
