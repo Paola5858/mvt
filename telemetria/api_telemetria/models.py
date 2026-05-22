@@ -81,8 +81,8 @@ class MedicaoVeiculo(models.Model):
     """Registro de medição de um veículo."""
     veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE, related_name="medicoes")
     medicao = models.ForeignKey(Medicao, on_delete=models.CASCADE, related_name="registros")
-    data = models.DateField(verbose_name="Data")
-    valor = models.FloatField(verbose_name="Valor")
+    data = models.DateTimeField(verbose_name="Data e Hora")
+    valor = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor")
 
     class Meta:
         verbose_name = "Medição de Veículo"

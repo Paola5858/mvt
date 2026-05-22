@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from decimal import Decimal
 from django.db import transaction
 from api_telemetria.models import MedicaoVeiculo, Veiculo, Medicao
 
@@ -37,7 +38,7 @@ def processar_medicoes_mqtt(dados_medicao_list):
                     raise ValueError("medicaoid/sensorid ausente ou inválido")
 
             try:
-                valor = float(item["valor"])
+                valor = Decimal(str(item["valor"]))
             except (KeyError, TypeError, ValueError):
                 raise ValueError("valor ausente ou inválido")
 

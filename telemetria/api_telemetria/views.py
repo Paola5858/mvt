@@ -8,7 +8,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F
-from django.utils.dateparse import parse_date
+from django.utils.dateparse import parse_date, parse_datetime
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from .models import (
@@ -469,21 +469,31 @@ class MedicaoVeiculoViewSet(viewsets.ModelViewSet):
         """
 
         # O glowUpInterface() dos dados: puxando tabelas estrangeiras de uma vez só!
-        relatorio_queryset = MedicaoVeiculo.objects.select_related(
-            'medicao__unidade_medida',
-            'veiculo__modelo',
-            'veiculo__marca'
-        ).annotate(
-            # O annotate aqui faz o papel do "AS" no SQL, renomeando os campos.
-            # O duplo underline (__) é o Django navegando entre os INNER JOINs!
-            descricao=F('veiculo__descricao'),
-            modelo=F('veiculo__modelo__nome'),
-            marca=F('veiculo__marca__nome'),
-            tipo=F('medicao__tipo'),
-            simbolo=F('medicao__unidade_medida__nome')
-        ).values(
-            # E o values() diz exatamente quais colunas vão pro nosso select final.
-            'id', 'data', 'descricao', 'modelo', 'marca', 'tipo', 'simbolo', 'valor'
+        relatorio_queryset = (
+            MedicaoVeiculo.objects.select_related(
+                "medicao__unidade_medida", "veiculo__modelo", "veiculo__marca"
+            )
+            .annotate(
+                # O annotate aqui faz o papel do "AS" no SQL, renomeando os campos.
+                # O duplo underline (__) é o Django navegando entre os INNER JOINs!
+                descricao=F("veiculo__descricao"),
+                modelo=F("veiculo__modelo__nome"),
+                marca=F("veiculo__marca__nome"),
+                tipo=F("medicao__tipo"),
+                unidade=F("medicao__unidade_medida__nome"),
+            )
+            .values(
+                # E o values() diz exatamente quais colunas vão pro nosso select final.
+                "id",
+                "data",
+                "descricao",
+                "modelo",
+                "marca",
+                "tipo",
+                "unidade",
+                "valor",
+            )
+            .order_by("-data")
         )
 
         data_inicial = request.query_params.get("data_inicial")
@@ -628,7 +638,7 @@ class SyncOfflineView(APIView):
 class DadosRelatorioViewSet(viewsets.ViewSet):
     @swagger_auto_schema(
         operation_summary="Dados para relatório",
-        operation_description="Retorna dados de medições de veículos filtrados por período, prontos para consumo no Power BI.",
+        operation_description="Retorna dados de medições de veículos filtrados por período, tipo e veículo, prontos para consumo no Power BI.",
         manual_parameters=[
             openapi.Parameter(
                 "data_inicio",
@@ -644,6 +654,18 @@ class DadosRelatorioViewSet(viewsets.ViewSet):
                 type=openapi.TYPE_STRING,
                 format=openapi.FORMAT_DATE,
             ),
+            openapi.Parameter(
+                "tipo",
+                openapi.IN_QUERY,
+                description="Filtrar por tipo de medição (por exemplo: combustivel, odometro, horimetro)",
+                type=openapi.TYPE_STRING,
+            ),
+            openapi.Parameter(
+                "descricao",
+                openapi.IN_QUERY,
+                description="Filtrar por descrição do veículo",
+                type=openapi.TYPE_STRING,
+            ),
         ],
         tags=["Relatórios"],
     )
@@ -651,22 +673,26 @@ class DadosRelatorioViewSet(viewsets.ViewSet):
     def DadosRelatorio(self, request):
         data_inicio = request.query_params.get("data_inicio")
         data_fim = request.query_params.get("data_fim")
+        tipo = request.query_params.get("tipo")
+        descricao = request.query_params.get("descricao")
 
         if data_inicio:
-            data_inicio = parse_date(data_inicio)
-            if data_inicio is None:
+            parsed_inicio = parse_datetime(data_inicio) or parse_date(data_inicio)
+            if parsed_inicio is None:
                 return Response(
-                    {"erro": "data_inicio inválida. Use o formato YYYY-MM-DD."},
+                    {"erro": "data_inicio inválida. Use YYYY-MM-DD ou ISO Format."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            data_inicio = parsed_inicio
 
         if data_fim:
-            data_fim = parse_date(data_fim)
-            if data_fim is None:
+            parsed_fim = parse_datetime(data_fim) or parse_date(data_fim)
+            if parsed_fim is None:
                 return Response(
-                    {"erro": "data_fim inválida. Use o formato YYYY-MM-DD."},
+                    {"erro": "data_fim inválida. Use YYYY-MM-DD ou ISO Format."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            data_fim = parsed_fim
 
         queryset = MedicaoVeiculo.objects.select_related(
             "veiculo__marca",
@@ -678,25 +704,130 @@ class DadosRelatorioViewSet(viewsets.ViewSet):
             queryset = queryset.filter(data__gte=data_inicio)
         if data_fim:
             queryset = queryset.filter(data__lte=data_fim)
+        if tipo:
+            queryset = queryset.filter(medicao__tipo=tipo)
+        if descricao:
+            queryset = queryset.filter(veiculo__descricao__iexact=descricao)
 
-        dados = queryset.annotate(
-            descricao=F("veiculo__descricao"),
-            modelo=F("veiculo__modelo__nome"),
-            marca=F("veiculo__marca__nome"),
-            tipo=F("medicao__tipo"),
-            unidade=F("medicao__unidade_medida__nome"),
-        ).values(
-            "id",
-            "data",
-            "descricao",
-            "modelo",
-            "marca",
-            "tipo",
-            "unidade",
-            "valor",
+        dados = (
+            queryset.annotate(
+                descricao=F("veiculo__descricao"),
+                modelo=F("veiculo__modelo__nome"),
+                marca=F("veiculo__marca__nome"),
+                tipo=F("medicao__tipo"),
+                unidade=F("medicao__unidade_medida__nome"),
+            )
+            .values(
+                "id",
+                "data",
+                "descricao",
+                "modelo",
+                "marca",
+                "tipo",
+                "unidade",
+                "valor",
+            )
+            .order_by("data")
         )
-
-        from .serializers import DadosRelatorioSerializer
 
         serializer = DadosRelatorioSerializer(dados, many=True)
         return Response(serializer.data)
+
+    @swagger_auto_schema(
+        operation_summary="Dados para relatório (formato tabular)",
+        operation_description="Retorna dados em formato tabular otimizado para Power BI e Excel.",
+        manual_parameters=[
+            openapi.Parameter(
+                "data_inicio",
+                openapi.IN_QUERY,
+                description="Data inicial do período (formato: YYYY-MM-DD)",
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATE,
+            ),
+            openapi.Parameter(
+                "data_fim",
+                openapi.IN_QUERY,
+                description="Data final do período (formato: YYYY-MM-DD)",
+                type=openapi.TYPE_STRING,
+                format=openapi.FORMAT_DATE,
+            ),
+            openapi.Parameter(
+                "tipo",
+                openapi.IN_QUERY,
+                description="Filtrar por tipo de medição",
+                type=openapi.TYPE_STRING,
+            ),
+            openapi.Parameter(
+                "descricao",
+                openapi.IN_QUERY,
+                description="Filtrar por descrição do veículo",
+                type=openapi.TYPE_STRING,
+            ),
+        ],
+        tags=["Relatórios"],
+    )
+    @action(detail=False, methods=["get"], url_path="dados-tabular")
+    def DadosTabular(self, request):
+        """Retorna os mesmos dados de DadosRelatorio mas em formato mais amigável para BI."""
+        data_inicio = request.query_params.get("data_inicio")
+        data_fim = request.query_params.get("data_fim")
+        tipo = request.query_params.get("tipo")
+        descricao = request.query_params.get("descricao")
+
+        if data_inicio:
+            parsed_inicio = parse_datetime(data_inicio) or parse_date(data_inicio)
+            if parsed_inicio is None:
+                return Response(
+                    {"erro": "data_inicio inválida. Use YYYY-MM-DD ou ISO Format."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            data_inicio = parsed_inicio
+
+        if data_fim:
+            parsed_fim = parse_datetime(data_fim) or parse_date(data_fim)
+            if parsed_fim is None:
+                return Response(
+                    {"erro": "data_fim inválida. Use YYYY-MM-DD ou ISO Format."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            data_fim = parsed_fim
+
+        queryset = MedicaoVeiculo.objects.select_related(
+            "veiculo__marca",
+            "veiculo__modelo",
+            "medicao__unidade_medida",
+        )
+
+        if data_inicio:
+            queryset = queryset.filter(data__gte=data_inicio)
+        if data_fim:
+            queryset = queryset.filter(data__lte=data_fim)
+        if tipo:
+            queryset = queryset.filter(medicao__tipo=tipo)
+        if descricao:
+            queryset = queryset.filter(veiculo__descricao__iexact=descricao)
+
+        dados = (
+            queryset.annotate(
+                descricao=F("veiculo__descricao"),
+                modelo=F("veiculo__modelo__nome"),
+                marca=F("veiculo__marca__nome"),
+                tipo=F("medicao__tipo"),
+                unidade=F("medicao__unidade_medida__nome"),
+            )
+            .values(
+                "id",
+                "data",
+                "descricao",
+                "modelo",
+                "marca",
+                "tipo",
+                "unidade",
+                "valor",
+            )
+            .order_by("data")
+        )
+
+        serializer = DadosRelatorioSerializer(dados, many=True)
+        # Formato tabular para Power BI
+        return Response({"value": serializer.data})

@@ -115,6 +115,12 @@ class MedicaoSerializer(serializers.ModelSerializer):
 class MedicaoVeiculoSerializer(serializers.ModelSerializer):
     veiculo_descricao = serializers.CharField(source='veiculo.descricao', read_only=True)
     medicao_tipo = serializers.CharField(source='medicao.tipo', read_only=True)
+    valor = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        coerce_to_string=False,
+        help_text="Valor registrado na medição",
+    )
 
     class Meta:
         model = MedicaoVeiculo
@@ -203,13 +209,15 @@ class MedicaoTelemetriaSerializer(serializers.Serializer):
 
 class DadosRelatorioSerializer(serializers.Serializer):
     id = serializers.IntegerField()
-    data = serializers.DateField()
+    data = serializers.DateTimeField()
     descricao = serializers.CharField()
     modelo = serializers.CharField()
     marca = serializers.CharField()
     tipo = serializers.CharField()
     unidade = serializers.CharField()
-    valor = serializers.FloatField()
+    valor = serializers.DecimalField(
+        max_digits=10, decimal_places=2, coerce_to_string=False
+    )
 
 
 class SyncPayloadSerializer(serializers.Serializer):
