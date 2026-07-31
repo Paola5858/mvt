@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 from decouple import config
 
@@ -39,7 +40,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "rest_framework.authtoken",
     "django_filters",
     "drf_yasg",
     "corsheaders",
@@ -139,7 +139,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
@@ -161,6 +161,13 @@ REST_FRAMEWORK = {
     },
 }
 
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+}
+
 # Swagger Settings
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {},
@@ -179,11 +186,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 # MQTT Configuration
 MQTT = {
-    "HOST": "jackal.rmq.cloudamqp.com",
-    "PORT": 1883,
+    "HOST": config("MQTT_HOST"),
+    "PORT": config("MQTT_PORT", default=1883, cast=int),
     "KEEPALIVE": 60,
-    "TOPIC": "dadosSensor",
-    "CLIENT_ID": "django-worker",
-    "USERNAME": "pyrxippi:pyrxippi",
-    "PASSWORD": "fK5ZIfhJHHuf15OvBKh4wLGz5c9c57GX",
+    "TOPIC": config("MQTT_TOPIC", default="dadosSensor"),
+    "CLIENT_ID": config("MQTT_CLIENT_ID", default="django-worker"),
+    "USERNAME": config("MQTT_USERNAME"),
+    "PASSWORD": config("MQTT_PASSWORD"),
 }

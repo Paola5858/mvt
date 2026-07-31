@@ -40,7 +40,7 @@ from .serializers import (
     LoginSerializer,
 )
 from .services import processar_csv_medicoes, SyncService
-from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 
 class MarcaViewSet(viewsets.ModelViewSet):
@@ -650,8 +650,8 @@ class LoginViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
 
     @swagger_auto_schema(
-        operation_summary="Login — gerar token",
-        operation_description="Autentica o usuário e retorna o token de acesso.",
+        operation_summary="Login — gerar token JWT",
+        operation_description="Autentica o usuário e retorna access token e refresh token.",
         request_body=LoginSerializer,
         responses={200: UserSerializer()},
         tags=["Autenticação"],
@@ -665,10 +665,11 @@ class LoginViewSet(viewsets.ViewSet):
             user = authenticate(username=username, password=password)
 
             if user is not None:
-                token, created = Token.objects.get_or_create(user=user)
+                refresh = RefreshToken.for_user(user)
                 return Response(
                     {
-                        "token": token.key,
+                        "access": str(refresh.access_token),
+                        "refresh": str(refresh),
                         "user": UserSerializer(user).data,
                     },
                     status=status.HTTP_200_OK,
@@ -678,6 +679,26 @@ class LoginViewSet(viewsets.ViewSet):
             {"error": "Invalid credentials"},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    @action(detail=False, methods=["post"])
+    def refresh(self, request):
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return Response(
+                {"error": "refresh token é obrigatório"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            return Response(
+                {"access": str(refresh.access_token)}, status=status.HTTP_200_OK
+            )
+        except TokenError:
+            return Response(
+                {"error": "refresh token inválido ou expirado"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
 
 class DadosRelatorioViewSet(viewsets.ViewSet):

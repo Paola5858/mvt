@@ -9,14 +9,16 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 
+from decouple import config
+
 MQTT = {
-    "HOST": "jackal.rmq.cloudamqp.com",
-    "PORT": 1883,
+    "HOST": config("MQTT_HOST", default="localhost"),
+    "PORT": config("MQTT_PORT", default=1883, cast=int),
     "KEEPALIVE": 60,
-    "TOPIC": "dadosSensor",
-    "CLIENT_ID": "django-publisher",
-    "USERNAME": "pyrxippi:pyrxippi",
-    "PASSWORD": "fK5ZIfhJHHuf15OvBKh4wLGz5c9c57GX",
+    "TOPIC": config("MQTT_TOPIC", default="dadosSensor"),
+    "CLIENT_ID": config("MQTT_CLIENT_ID", default="django-publisher"),
+    "USERNAME": config("MQTT_USERNAME", default=""),
+    "PASSWORD": config("MQTT_PASSWORD", default=""),
 }
 
 

@@ -1,6 +1,7 @@
 # Django e REST Framework
 Django>=6.0.4,<6.1
 djangorestframework>=3.15.2,<4.0
+djangorestframework-simplejwt>=5.3.0,<6.0
 
 # Filtros e Paginação
 django-filter>=23.0,<25.0

@@ -88,6 +88,40 @@ class MedicaoVeiculoTestCase(APITestCase):
         self.assertEqual(float(response.data["valor"]), 15000.0)  # type: ignore
 
 
+class LoginViewTestCase(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="joao", password="senha123")
+
+    def test_login_retorna_access_e_refresh(self):
+        response = self.client.post(
+            "/api/auth/login/",
+            {"username": "joao", "password": "senha123"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
+        self.assertNotIn("token", response.data)
+        self.assertEqual(response.data["user"]["username"], "joao")  # type: ignore
+
+    def test_refresh_gera_novo_access(self):
+        login_response = self.client.post(
+            "/api/auth/login/",
+            {"username": "joao", "password": "senha123"},
+            format="json",
+        )
+
+        refresh_response = self.client.post(
+            "/api/auth/refresh/",
+            {"refresh": login_response.data["refresh"]},
+            format="json",
+        )
+
+        self.assertEqual(refresh_response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", refresh_response.data)
+
+
 class SyncOfflineViewTestCase(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="trator", password="tractorpass123")
