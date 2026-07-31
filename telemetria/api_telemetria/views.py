@@ -691,6 +691,8 @@ class LoginViewSet(viewsets.ViewSet):
 
         try:
             refresh = RefreshToken(refresh_token)
+            refresh.check_blacklist()
+            refresh.blacklist()
             return Response(
                 {"access": str(refresh.access_token)}, status=status.HTTP_200_OK
             )

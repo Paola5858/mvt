@@ -35,6 +35,9 @@ staticfiles/
 .env
 .venv
 
+# Sensitive debug artifacts
+swagger_error.html
+
 # IDE
 .vscode/
 .idea/

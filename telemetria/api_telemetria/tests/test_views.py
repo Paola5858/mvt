@@ -122,6 +122,7 @@ class LoginViewTestCase(APITestCase):
         self.assertIn("access", refresh_response.data)
 
 
+
 class SyncOfflineViewTestCase(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="trator", password="tractorpass123")
