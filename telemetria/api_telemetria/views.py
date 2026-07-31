@@ -690,13 +690,26 @@ class LoginViewSet(viewsets.ViewSet):
             )
 
         try:
-            refresh = RefreshToken(refresh_token)
-            refresh.check_blacklist()
-            refresh.blacklist()
+            old_refresh = RefreshToken(refresh_token)
+            user_id = old_refresh["user_id"]
+            old_refresh.blacklist()
+
+            user = User.objects.get(id=user_id)
+            new_refresh = RefreshToken.for_user(user)
+
             return Response(
-                {"access": str(refresh.access_token)}, status=status.HTTP_200_OK
+                {
+                    "access": str(new_refresh.access_token),
+                    "refresh": str(new_refresh),
+                },
+                status=status.HTTP_200_OK,
             )
         except TokenError:
+            return Response(
+                {"error": "refresh token inválido ou expirado"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        except User.DoesNotExist:
             return Response(
                 {"error": "refresh token inválido ou expirado"},
                 status=status.HTTP_401_UNAUTHORIZED,

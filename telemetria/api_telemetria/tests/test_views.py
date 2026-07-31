@@ -120,7 +120,30 @@ class LoginViewTestCase(APITestCase):
 
         self.assertEqual(refresh_response.status_code, status.HTTP_200_OK)
         self.assertIn("access", refresh_response.data)
+        self.assertIn("refresh", refresh_response.data)
+        self.assertNotEqual(refresh_response.data["refresh"], login_response.data["refresh"])
 
+    def test_refresh_token_rejeita_reuso(self):
+        login_response = self.client.post(
+            "/api/auth/login/",
+            {"username": "joao", "password": "senha123"},
+            format="json",
+        )
+
+        first_refresh = self.client.post(
+            "/api/auth/refresh/",
+            {"refresh": login_response.data["refresh"]},
+            format="json",
+        )
+        second_refresh = self.client.post(
+            "/api/auth/refresh/",
+            {"refresh": login_response.data["refresh"]},
+            format="json",
+        )
+
+        self.assertEqual(first_refresh.status_code, status.HTTP_200_OK)
+        self.assertEqual(second_refresh.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("error", second_refresh.data)
 
 
 class SyncOfflineViewTestCase(APITestCase):
